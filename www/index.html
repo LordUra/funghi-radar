@@ -702,6 +702,16 @@ function updateSegnBadge() {
   document.getElementById("segn-badge").textContent = segnalazioni.length?` (${segnalazioni.length})`:"";
 }
 
+function openMaps(lat, lon, nome) {
+  // Su Android apre Google Maps, su browser apre maps.google.com
+  const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lon}&query_place_id=${encodeURIComponent(nome)}`;
+  if(window.Capacitor && window.Capacitor.isNativePlatform()) {
+    window.open(`geo:${lat},${lon}?q=${lat},${lon}(${encodeURIComponent(nome)})`, "_system");
+  } else {
+    window.open(url, "_blank");
+  }
+}
+
 function renderFavList() {
   const el=document.getElementById("fav-list");
   if(!favorites.length){el.innerHTML=`<div class="empty-state">Nessun luogo preferito ancora.<br>Aggiungine uno qui sopra.</div>`;return;}
@@ -715,7 +725,10 @@ function renderFavList() {
       <div class="fav-meta">${distStr}${f.quota}m slm${f.note?" · "+f.note:""}</div>
       <div class="fav-foot">
         <span class="badge ${f.notifiche!==false?"notif-on":"notif-off"}" onclick="toggleNotif(${f.id})">${f.notifiche!==false?"🔔 Notifiche on":"🔕 Notifiche off"}</span>
-        <button class="icon-btn" onclick="removeFav(${f.id})">
+        <button class="icon-btn" title="Apri in Maps" onclick="openMaps(${f.lat},${f.lon},'${f.nome.replace(/'/g,"\'")}')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+        </button>
+        <button class="icon-btn" title="Rimuovi" onclick="removeFav(${f.id})">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
         </button>
       </div>
@@ -756,19 +769,31 @@ async function startLocate() {
     const lat=coords.latitude, lon=coords.longitude;
     state.pos={lat,lon};
 
-    setStatus("Scarico dati meteo...");
-    let temp=15, um=65, soilMoist=null;
-    try{const m=await getMeteo(lat,lon);temp=m.temp;um=m.um;soilMoist=m.soilMoist;}catch(e){}
-    state.temp=temp; state.um=um;
-    const quota=pos.coords.altitude?Math.round(pos.coords.altitude):stimaQuota(lat,lon);
+    setStatus("Scarico meteo, suolo e zona in parallelo...");
+    const quota=coords.altitude?Math.round(coords.altitude):stimaQuota(lat,lon);
     state.quota=quota;
 
-    setStatus("Scarico dati suolo (SoilGrids)...");
-    const soilData=await getSoil(lat,lon);
-    state.soil=soilData?{...soilData,umSuolo:soilMoist,source:soilData.source}:{ph:null,tipo:null,umSuolo:soilMoist,org:null,source:"Non disponibile"};
+    // Timeout SoilGrids 8 secondi
+    const soilPromise = Promise.race([
+      getSoil(lat,lon),
+      new Promise(res=>setTimeout(()=>res(null),8000))
+    ]);
 
-    setStatus("Geocodifica zona...");
-    state.zona=await reverseGeocode(lat,lon);
+    const [meteoRes, soilRes, zonaRes] = await Promise.allSettled([
+      getMeteo(lat,lon),
+      soilPromise,
+      reverseGeocode(lat,lon)
+    ]);
+
+    let temp=15, um=65, soilMoist=null;
+    if(meteoRes.status==="fulfilled"&&meteoRes.value){
+      temp=meteoRes.value.temp; um=meteoRes.value.um; soilMoist=meteoRes.value.soilMoist;
+    }
+    state.temp=temp; state.um=um;
+
+    const soilData=soilRes.status==="fulfilled"?soilRes.value:null;
+    state.soil=soilData?{...soilData,umSuolo:soilMoist,source:soilData.source}:{ph:null,tipo:null,umSuolo:soilMoist,org:null,source:"Non disponibile"};
+    state.zona=zonaRes.status==="fulfilled"?zonaRes.value:"zona";
 
     // Render metriche
     const soil=mergedSoil();
