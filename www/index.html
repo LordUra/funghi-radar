@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Funghi Radar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green-dark: #1a3a1a;
+  --green-mid: #2d5a2d;
+  --green-light: #4a8c4a;
+  --green-pale: #a8c8a8;
+  --green-ghost: #e8f2e8;
+  --amber: #c8820a;
+  --amber-light: #f5e6c0;
+  --red: #8b2a2a;
+  --cream: #f5f0e8;
+  --cream-dark: #ede5d5;
+  --brown: #5a3e28;
+  --text: #1a1a1a;
+  --text-mid: #4a4a4a;
+  --text-muted: #888;
+  --border: rgba(0,0,0,0.1);
+  --radius: 12px;
+  --shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--cream);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 15px;
+}
+
+/* HEADER */
+.header {
+  background: var(--green-dark);
+  padding: 1.25rem 1.25rem 0;
+  position: sticky; top: 0; z-index: 100;
+}
+.header-top {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.logo {
+  font-family: 'DM Serif Display', serif;
+  font-size: 22px; color: var(--cream);
+  display: flex; align-items: center; gap: 8px;
+}
+.logo-icon { font-size: 20px; }
+.header-sub { font-size: 11px; color: var(--green-pale); font-weight: 300; }
+.tabs {
+  display: flex; gap: 0;
+}
+.tab {
+  padding: 9px 16px;
+  font-size: 13px; font-family: 'DM Sans', sans-serif;
+  background: transparent; border: none; cursor: pointer;
+  color: var(--green-pale); border-bottom: 2px solid transparent;
+  transition: all .2s; font-weight: 400; white-space: nowrap;
+}
+.tab.active { color: var(--cream); border-bottom-color: #7ec87e; }
+.tab:hover:not(.active) { color: #c8e8c8; }
+
+/* MAIN */
+.main { max-width: 520px; margin: 0 auto; padding: 1.25rem; }
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* BUTTONS */
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 10px 18px; border-radius: var(--radius);
+  font-size: 13px; font-family: 'DM Sans', sans-serif;
+  cursor: pointer; font-weight: 500; transition: all .15s;
+  border: 1.5px solid transparent;
+}
+.btn-primary {
+  background: var(--green-mid); color: #fff; border-color: var(--green-mid);
+}
+.btn-primary:hover { background: var(--green-light); }
+.btn-secondary {
+  background: transparent; color: var(--text); border-color: var(--border);
+  border: 1.5px solid rgba(0,0,0,0.15);
+}
+.btn-secondary:hover { background: var(--cream-dark); }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+.row-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.25rem; }
+
+/* STATUS */
+.status-bar {
+  display: none; align-items: center; gap: 8px;
+  padding: 10px 14px; border-radius: var(--radius);
+  background: var(--green-dark); color: var(--green-pale);
+  font-size: 12px; margin-bottom: 1.25rem;
+}
+.spinner {
+  width: 14px; height: 14px; flex-shrink: 0;
+  border: 2px solid rgba(255,255,255,.2);
+  border-top-color: var(--green-pale);
+  border-radius: 50%; animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ALERT BANNERS */
+.alert-banner {
+  border-radius: var(--radius); padding: 1rem 1.125rem;
+  margin-bottom: .875rem; border: 1.5px solid;
+  animation: pulse-b 2.5s ease infinite;
+}
+@keyframes pulse-b { 0%,100%{opacity:1}50%{opacity:.7} }
+.alert-banner.alta { background: #d4edda; border-color: #2d7a2d; color: #1a3a1a; }
+.alert-banner.media { background: var(--amber-light); border-color: var(--amber); color: #4a2e00; }
+.alert-title { font-weight: 500; font-size: 13px; margin-bottom: 3px; }
+.alert-body { font-size: 12px; opacity: .8; }
+
+/* CARDS */
+.card {
+  background: #fff; border-radius: var(--radius);
+  border: 1px solid var(--border); padding: 1.125rem;
+  margin-bottom: 1rem; box-shadow: var(--shadow);
+}
+.card-title {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--text-muted); margin-bottom: 12px; font-weight: 500;
+}
+
+/* METRICS */
+.metrics-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 1rem; }
+.metric {
+  background: #fff; border-radius: var(--radius);
+  border: 1px solid var(--border); padding: .875rem;
+  box-shadow: var(--shadow);
+}
+.metric-lbl { font-size: 11px; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .06em; }
+.metric-val { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--text); }
+.metric-u { font-family: 'DM Sans', sans-serif; font-size: 12px; color: var(--text-muted); }
+
+/* SOIL */
+.soil-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; margin-bottom: 1rem; }
+.soil-item { background: #fff; border-radius: var(--radius); border: 1px solid var(--border); padding: .75rem; box-shadow: var(--shadow); }
+.soil-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: .07em; color: var(--text-muted); margin-bottom: 4px; }
+.soil-val { font-size: 14px; font-weight: 500; color: var(--text); }
+.soil-source { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+/* SEMAFORO */
+.semaforo-row { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
+.s-dot { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; }
+.s-label { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--text); }
+.s-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.meter { height: 6px; border-radius: 3px; background: var(--cream-dark); overflow: hidden; }
+.meter-fill { height: 100%; border-radius: 3px; transition: width .9s ease; }
+
+/* SPECIES */
+.specie-list { display: flex; flex-direction: column; gap: 8px; }
+.specie-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 10px;
+  border: 1px solid var(--border); cursor: pointer;
+  transition: background .12s; background: #fafaf8;
+}
+.specie-row:hover, .specie-row.open { background: var(--green-ghost); border-color: var(--green-pale); }
+.specie-icon { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+.specie-nome { font-size: 13px; font-weight: 500; }
+.specie-sci { font-size: 11px; color: var(--text-muted); font-style: italic; margin-top: 1px; }
+.prob-wrap { margin-left: auto; text-align: right; flex-shrink: 0; }
+.prob-pct { font-family: 'DM Serif Display', serif; font-size: 17px; }
+.prob-bar { height: 4px; width: 70px; border-radius: 2px; background: var(--cream-dark); overflow: hidden; margin-top: 4px; }
+.prob-fill { height: 100%; border-radius: 2px; }
+.specie-detail {
+  display: none; padding: 10px 12px 8px;
+  border: 1px solid var(--green-pale); border-top: none;
+  border-radius: 0 0 10px 10px; background: var(--green-ghost);
+  margin-top: -6px;
+}
+.specie-detail.open { display: block; }
+.dtags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 7px; }
+.dtag { font-size: 11px; padding: 2px 9px; border-radius: 9px; background: #fff; border: 1px solid var(--green-pale); color: var(--green-mid); }
+.detail-txt { font-size: 12px; color: var(--text-mid); line-height: 1.6; }
+
+/* SEGNALAZIONI */
+.segn-card { border-radius: var(--radius); padding: .875rem; margin-bottom: 8px; border: 1px solid var(--border); background: #fff; box-shadow: var(--shadow); }
+.segn-tipo { font-size: 10px; font-weight: 500; padding: 2px 9px; border-radius: 8px; display: inline-block; margin-bottom: 7px; text-transform: uppercase; letter-spacing: .05em; }
+.segn-tipo.forum { background: #dbeafe; color: #1e40af; }
+.segn-tipo.meteo { background: var(--amber-light); color: #92400e; }
+.segn-tipo.specie { background: var(--green-ghost); color: var(--green-mid); }
+.segn-tipo.zona { background: #ede9fe; color: #5b21b6; }
+.segn-testo { font-size: 13px; color: var(--text); line-height: 1.6; }
+.segn-fonte { font-size: 11px; color: var(--text-muted); margin-top: 5px; }
+
+/* VEGETATION */
+.veg-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 1rem; }
+.veg-btn {
+  padding: 9px 6px; border: 1.5px solid var(--border);
+  border-radius: var(--radius); background: #fff;
+  cursor: pointer; font-size: 12px; color: var(--text-mid);
+  font-family: 'DM Sans', sans-serif; text-align: center;
+  transition: all .15s;
+}
+.veg-btn:hover { border-color: var(--green-pale); background: var(--green-ghost); }
+.veg-btn.sel { border-color: var(--green-light); background: var(--green-ghost); color: var(--green-mid); font-weight: 500; }
+
+/* FORM */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0; }
+.full { grid-column: 1/-1; }
+.field label { font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 5px; text-transform: uppercase; letter-spacing: .05em; }
+.field input, .field select {
+  width: 100%; padding: 9px 12px; font-size: 13px;
+  border: 1.5px solid rgba(0,0,0,.12); border-radius: 9px;
+  background: #fff; color: var(--text); font-family: 'DM Sans', sans-serif;
+  transition: border-color .15s;
+}
+.field input:focus, .field select:focus { outline: none; border-color: var(--green-light); }
+
+/* FAVORITES */
+.fav-card { background: #fff; border-radius: var(--radius); border: 1px solid var(--border); padding: .875rem 1rem; margin-bottom: 8px; box-shadow: var(--shadow); }
+.fav-nome { font-size: 14px; font-weight: 500; }
+.fav-meta { font-size: 12px; color: var(--text-muted); margin: 4px 0 8px; }
+.fav-foot { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.badge { font-size: 11px; padding: 3px 9px; border-radius: 9px; border: 1px solid; font-weight: 500; }
+.badge.alta { background: #d4edda; color: #1a3a1a; border-color: #7ec87e; }
+.badge.media { background: var(--amber-light); color: #4a2e00; border-color: var(--amber); }
+.badge.bassa { background: var(--cream-dark); color: var(--text-muted); border-color: var(--border); }
+.badge.notif-on { background: var(--green-ghost); color: var(--green-mid); border-color: var(--green-pale); cursor: pointer; }
+.badge.notif-off { background: var(--cream-dark); color: var(--text-muted); border-color: var(--border); cursor: pointer; }
+.icon-btn { width: 28px; height: 28px; border-radius: 8px; border: 1px solid var(--border); background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-muted); transition: background .12s; }
+.icon-btn:hover { background: var(--cream-dark); }
+
+.empty-state { padding: 2.5rem 1rem; text-align: center; color: var(--text-muted); font-size: 13px; border: 1.5px dashed var(--border); border-radius: var(--radius); }
+.notif-bar { padding: .875rem 1rem; background: var(--green-ghost); border-radius: var(--radius); font-size: 12px; color: var(--green-mid); display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 1rem; border: 1px solid var(--green-pale); }
+.analisi-testo { font-size: 13px; color: var(--text-mid); line-height: 1.75; margin-top: 8px; }
+.section-divider { height: 1px; background: var(--border); margin: 1.25rem 0; }
+.fav-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+
+/* API KEY BAR */
+.apikey-bar {
+  background: #0e2a0e; border-bottom: 1px solid rgba(255,255,255,.08);
+  padding: .625rem 1.25rem; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.apikey-label { font-size: 11px; color: var(--green-pale); white-space: nowrap; }
+.apikey-input {
+  flex: 1; min-width: 180px; padding: 6px 10px; font-size: 12px;
+  border: 1px solid rgba(255,255,255,.15); border-radius: 8px;
+  background: rgba(255,255,255,.07); color: var(--cream);
+  font-family: 'DM Sans', monospace; letter-spacing: .03em;
+}
+.apikey-input::placeholder { color: rgba(255,255,255,.3); }
+.apikey-input:focus { outline: none; border-color: var(--green-pale); }
+.apikey-save { padding: 6px 12px; font-size: 12px; border-radius: 8px; border: 1px solid var(--green-pale); background: transparent; color: var(--green-pale); cursor: pointer; font-family: 'DM Sans', sans-serif; white-space: nowrap; }
+.apikey-save:hover { background: rgba(168,200,168,.15); }
+.apikey-ok { font-size: 11px; color: #7ec87e; display: none; }
+.apikey-warn { font-size: 11px; color: #f5c542; }
+
+/* FOOTER */
+.footer { text-align: center; padding: 2rem 1rem 3rem; font-size: 11px; color: var(--text-muted); }
+
+/* MOBILE */
+@media (max-width: 400px) {
+  .metrics-grid { grid-template-columns: repeat(3,1fr); }
+  .metric-val { font-size: 18px; }
+  .tab { padding: 9px 11px; font-size: 12px; }
+}
+</style>
+</head>
+<body>
+
+<div class="apikey-bar" id="apikey-bar">
+  <span class="apikey-label">API Key Anthropic</span>
+  <input class="apikey-input" type="password" id="apikey-input" placeholder="sk-ant-api03-..." autocomplete="off" spellcheck="false">
+  <button class="apikey-save" onclick="saveApiKey()">Salva</button>
+  <span class="apikey-ok" id="apikey-ok">✓ Salvata</span>
+  <span class="apikey-warn" id="apikey-warn"></span>
+</div>
+
+<div class="header">
+  <div class="header-top">
+    <div class="logo"><span class="logo-icon">🍄</span> Funghi Radar<span class="header-sub" style="margin-left:8px">beta</span></div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('radar')">Radar</button>
+    <button class="tab" onclick="switchTab('segnalazioni')">Segnalazioni<span id="segn-badge"></span></button>
+    <button class="tab" onclick="switchTab('terreno')">Terreno</button>
+    <button class="tab" onclick="switchTab('preferiti')">Preferiti<span id="fav-badge"></span></button>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- ===== RADAR ===== -->
+  <div class="panel active" id="panel-radar" style="padding-top:1.25rem">
+    <div id="alert-banners"></div>
+    <div class="row-btns">
+      <button class="btn btn-primary" id="btn-locate" onclick="startLocate()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="9" stroke-dasharray="3 3"/></svg>
+        Rileva posizione
+      </button>
+      <button class="btn btn-secondary" id="btn-fav-check" style="display:none" onclick="checkAllFavorites()">Controlla preferiti</button>
+    </div>
+    <div class="status-bar" id="status"><div class="spinner"></div><span id="status-msg">...</span></div>
+
+    <div id="main-content" style="display:none">
+      <div class="metrics-grid">
+        <div class="metric"><div class="metric-lbl">Temp.</div><div class="metric-val" id="v-temp">--<span class="metric-u">°C</span></div></div>
+        <div class="metric"><div class="metric-lbl">Umidità</div><div class="metric-val" id="v-um">--<span class="metric-u">%</span></div></div>
+        <div class="metric"><div class="metric-lbl">Quota</div><div class="metric-val" id="v-quota">--<span class="metric-u">m</span></div></div>
+      </div>
+      <div class="soil-grid" id="soil-display"></div>
+
+      <div class="card">
+        <div class="card-title">Probabilità generale</div>
+        <div class="semaforo-row">
+          <div class="s-dot" id="s-dot"></div>
+          <div><div class="s-label" id="s-label">--</div><div class="s-sub" id="s-sub"></div></div>
+        </div>
+        <div class="meter"><div class="meter-fill" id="m-fill" style="width:0%"></div></div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div class="card-title" style="margin:0">Specie probabili</div>
+          <div class="spinner" id="sp-spin" style="display:none;border-top-color:var(--green-light)"></div>
+        </div>
+        <div class="specie-list" id="specie-list"></div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <div class="card-title" style="margin:0">Analisi AI</div>
+          <div class="spinner" id="ai-spin" style="display:none;border-top-color:var(--green-light)"></div>
+        </div>
+        <div class="analisi-testo" id="analisi-testo"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SEGNALAZIONI ===== -->
+  <div class="panel" id="panel-segnalazioni" style="padding-top:1.25rem">
+    <div class="row-btns">
+      <button class="btn btn-primary" id="btn-search" onclick="searchWeb(true)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        Cerca segnalazioni ora
+      </button>
+    </div>
+    <div class="status-bar" id="status-segn"><div class="spinner"></div><span id="status-segn-msg">...</span></div>
+    <div id="segn-content">
+      <div class="empty-state" id="segn-empty">Rileva prima la posizione nel tab Radar,<br>oppure clicca "Cerca segnalazioni ora".</div>
+    </div>
+  </div>
+
+  <!-- ===== TERRENO ===== -->
+  <div class="panel" id="panel-terreno" style="padding-top:1.25rem">
+    <div class="card">
+      <div class="card-title">Vegetazione presente</div>
+      <div class="veg-grid" id="veg-grid"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Dati suolo (sovrascrivono i valori automatici)</div>
+      <div class="form-grid">
+        <div class="field"><label>pH suolo</label><input type="number" id="m-ph" placeholder="es. 5.5" step="0.1" min="0" max="14"></div>
+        <div class="field"><label>Tipo suolo</label>
+          <select id="m-tipo">
+            <option value="">— auto —</option>
+            <option value="argilloso">Argilloso</option>
+            <option value="limoso">Limoso</option>
+            <option value="sabbioso">Sabbioso</option>
+            <option value="franco">Franco</option>
+            <option value="calcareo">Calcareo</option>
+            <option value="vulcanico">Vulcanico</option>
+            <option value="torboso">Torboso</option>
+          </select>
+        </div>
+        <div class="field"><label>Umidità suolo %</label><input type="number" id="m-umsuolo" placeholder="es. 40" step="1" min="0" max="100"></div>
+        <div class="field"><label>Sostanza organica %</label><input type="number" id="m-org" placeholder="es. 4.5" step="0.1" min="0" max="20"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <button class="btn btn-primary" onclick="applyManual()">Applica e ricalcola</button>
+        <span id="manual-ok" style="font-size:12px;color:var(--green-mid);display:none">✓ Applicato</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PREFERITI ===== -->
+  <div class="panel" id="panel-preferiti" style="padding-top:1.25rem">
+    <div id="notif-bar-wrap"></div>
+    <div class="card">
+      <div class="card-title">Aggiungi luogo preferito</div>
+      <div class="form-grid">
+        <div class="field full"><label>Nome</label><input type="text" id="f-nome" placeholder="es. Bosco del Terminillo nord"></div>
+        <div class="field"><label>Latitudine</label><input type="number" id="f-lat" step="0.0001" placeholder="42.4700"></div>
+        <div class="field"><label>Longitudine</label><input type="number" id="f-lon" step="0.0001" placeholder="13.0000"></div>
+        <div class="field"><label>Quota (m)</label><input type="number" id="f-quota" placeholder="1550"></div>
+        <div class="field"><label>Note</label><input type="text" id="f-note" placeholder="facoltativo"></div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="addFav()">Aggiungi</button>
+        <button class="btn btn-secondary" onclick="useGPS()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+          Usa posizione attuale
+        </button>
+        <span id="fav-err" style="font-size:12px;color:var(--red);display:none"></span>
+      </div>
+    </div>
+    <div id="fav-list"></div>
+  </div>
+
+</div>
+
+<div class="footer">Funghi Radar v1.1 · Dati: Open-Meteo, SoilGrids ISRIC, OpenStreetMap<br>⚠️ Per uso esplorativo. Rivolgersi sempre a un micologo per il riconoscimento.</div>
+
+<script>
+// ─── COSTANTI ────────────────────────────────────────────────────────────────
+const CLAUDE_MODEL = "claude-sonnet-4-20250514";
+
+// ─── API KEY ─────────────────────────────────────────────────────────────────
+let apiKey = "";
+try { apiKey = localStorage.getItem("funghiRadar_apikey") || ""; } catch(e) {}
+
+function initApiKeyUI() {
+  const inp = document.getElementById("apikey-input");
+  const warn = document.getElementById("apikey-warn");
+  if(apiKey) {
+    inp.value = apiKey;
+    document.getElementById("apikey-ok").style.display = "inline";
+    warn.textContent = "";
+  } else {
+    warn.textContent = "⚠ Inserisci la tua API key per usare l'app";
+  }
+}
+
+function saveApiKey() {
+  const val = document.getElementById("apikey-input").value.trim();
+  const warn = document.getElementById("apikey-warn");
+  const ok = document.getElementById("apikey-ok");
+  if(!val.startsWith("sk-ant-")) {
+    warn.textContent = "⚠ Formato non valido (deve iniziare con sk-ant-)";
+    ok.style.display = "none";
+    return;
+  }
+  apiKey = val;
+  try { localStorage.setItem("funghiRadar_apikey", val); } catch(e) {}
+  ok.style.display = "inline";
+  warn.textContent = "";
+  setTimeout(()=>ok.style.display="none", 2500);
+}
+
+function getApiKey() {
+  if(!apiKey) {
+    alert("Inserisci prima la tua API key Anthropic nella barra in cima.\nPuoi ottenerla su console.anthropic.com");
+    return null;
+  }
+  return apiKey;
+}
+
+const VEG_OPTIONS = [
+  {id:"faggi",lbl:"Faggi",icon:"🌳"},{id:"querce",lbl:"Querce",icon:"🌲"},
+  {id:"castagni",lbl:"Castagni",icon:"🌰"},{id:"abeti",lbl:"Abeti/Pini",icon:"🌲"},
+  {id:"pioppi",lbl:"Pioppi/Betulle",icon:"🍃"},{id:"noccioli",lbl:"Noccioli",icon:"🌿"},
+  {id:"prati",lbl:"Prati/Pascoli",icon:"🌾"},{id:"macchia",lbl:"Macchia med.",icon:"🌱"},
+  {id:"misto",lbl:"Bosco misto",icon:"🍂"},
+];
+
+const SPECIE_DB = [
+  {nome:"Porcino",sci:"Boletus edulis",icon:"🍄",
+   cond:{tempMin:8,tempMax:18,umMin:70,umMax:95,phMin:4.5,phMax:6.5,quotaMin:400,quotaMax:1800,org:3},
+   veg:["faggi","abeti","querce","misto"],tipo:["franco","limoso","torboso"],
+   stagioni:[8,9,10],tags:["Alta quota","pH acido","Autunno","Boschi di latifoglie"],
+   desc:"Cresce in simbiosi con faggi, abeti e querce. Predilige suoli acidi, freschi e ricchi di humus. Teme il caldo secco."},
+  {nome:"Gallinaccio",sci:"Cantharellus cibarius",icon:"🌼",
+   cond:{tempMin:10,tempMax:22,umMin:65,umMax:90,phMin:4.0,phMax:6.0,quotaMin:200,quotaMax:1500,org:2.5},
+   veg:["faggi","querce","misto","castagni"],tipo:["franco","sabbioso","limoso"],
+   stagioni:[5,6,7,8,9],tags:["Boschi misti","Estate-autunno","pH acido"],
+   desc:"Comune in boschi di latifoglie su terreni acidi. Appare dopo le piogge estive, spesso in colonie sparse."},
+  {nome:"Ovulo",sci:"Amanita caesarea",icon:"🥚",
+   cond:{tempMin:14,tempMax:26,umMin:60,umMax:85,phMin:5.5,phMax:7.5,quotaMin:100,quotaMax:1200,org:2},
+   veg:["querce","castagni","macchia","misto"],tipo:["franco","calcareo","sabbioso"],
+   stagioni:[6,7,8,9],tags:["Caldo","Querce","Estate"],
+   desc:"Specie termofila, cresce sotto querce e castagni. Suoli neutri o moderatamente acidi. Pregiato."},
+  {nome:"Chiodino",sci:"Armillaria mellea",icon:"🍂",
+   cond:{tempMin:8,tempMax:18,umMin:70,umMax:95,phMin:5.0,phMax:7.0,quotaMin:50,quotaMax:1000,org:3.5},
+   veg:["querce","pioppi","misto","castagni","noccioli"],tipo:["franco","argilloso","limoso"],
+   stagioni:[9,10,11],tags:["Ceppi","Autunno","Bassa quota"],
+   desc:"Parassita di ceppi e radici. Cresce a ciuffi numerosi in autunno su latifoglie."},
+  {nome:"Russola",sci:"Russula spp.",icon:"🔴",
+   cond:{tempMin:12,tempMax:24,umMin:60,umMax:88,phMin:4.5,phMax:6.5,quotaMin:100,quotaMax:1400,org:2},
+   veg:["faggi","abeti","querce","misto"],tipo:["franco","sabbioso","limoso"],
+   stagioni:[6,7,8,9,10],tags:["Boschi vari","Estate-autunno"],
+   desc:"Genere diffusissimo. Attenzione: specie commestibili e velenose coesistono. Riconoscimento essenziale."},
+  {nome:"Prataiolo",sci:"Agaricus campestris",icon:"⚪",
+   cond:{tempMin:10,tempMax:22,umMin:55,umMax:82,phMin:6.0,phMax:7.5,quotaMin:0,quotaMax:800,org:1.5},
+   veg:["prati","macchia"],tipo:["franco","sabbioso","calcareo"],
+   stagioni:[4,5,6,9,10],tags:["Prati","Neutro-basico","Bassa quota"],
+   desc:"Cresce in prati e pascoli, spesso in cerchi. Predilige suoli neutri o calcarei."},
+  {nome:"Spugnola",sci:"Morchella spp.",icon:"🫧",
+   cond:{tempMin:4,tempMax:14,umMin:60,umMax:88,phMin:6.0,phMax:8.0,quotaMin:50,quotaMax:1200,org:2.5},
+   veg:["pioppi","noccioli","misto","querce"],tipo:["franco","calcareo","limoso"],
+   stagioni:[2,3,4],tags:["Primavera","Calcareo","Corsi d'acqua"],
+   desc:"Fungo primaverile. Predilige terreni calcarei umidi vicino a corsi d'acqua e bordi di bosco."},
+  {nome:"Mazza di tamburo",sci:"Macrolepiota procera",icon:"🌂",
+   cond:{tempMin:12,tempMax:24,umMin:55,umMax:82,phMin:5.0,phMax:7.5,quotaMin:0,quotaMax:1000,org:1.5},
+   veg:["prati","misto","macchia","querce"],tipo:["franco","sabbioso"],
+   stagioni:[7,8,9,10],tags:["Radure","Estate-autunno","Diffusa"],
+   desc:"Frequente nelle radure e ai margini dei boschi. Adattabile a vari tipi di suolo."},
+  {nome:"Lattario delizioso",sci:"Lactarius deliciosus",icon:"🟠",
+   cond:{tempMin:8,tempMax:18,umMin:65,umMax:90,phMin:4.5,phMax:6.0,quotaMin:300,quotaMax:1600,org:3},
+   veg:["abeti"],tipo:["sabbioso","franco"],
+   stagioni:[8,9,10],tags:["Pinete","Acido","Alta quota"],
+   desc:"Strettamente micorrizico con pini e abeti. Comune nelle pinete montane su suoli acidi."},
+  {nome:"Trombetta dei morti",sci:"Craterellus cornucopioides",icon:"🖤",
+   cond:{tempMin:8,tempMax:18,umMin:75,umMax:95,phMin:4.5,phMax:6.5,quotaMin:200,quotaMax:1200,org:3.5},
+   veg:["faggi","querce","castagni","misto"],tipo:["limoso","franco","torboso"],
+   stagioni:[9,10,11],tags:["Humus ricco","Autunno","Ombra"],
+   desc:"Difficile da vedere per il colore scuro. Cresce in lettiere umide di faggio e quercia."},
+];
+
+// ─── STATO ───────────────────────────────────────────────────────────────────
+let state = {
+  pos:null, temp:null, um:null, quota:null,
+  soil:{ph:null,tipo:null,umSuolo:null,org:null,source:"—"},
+  vegSel:new Set(), manual:{ph:null,tipo:null,umSuolo:null,org:null},
+  zona:null, lastSpecie:null
+};
+let favorites = [];
+let notifPerm = "default";
+let segnalazioni = [];
+
+try { favorites = JSON.parse(localStorage.getItem("funghiRadar_fav") || "[]"); } catch(e) {}
+function saveFavs() { try { localStorage.setItem("funghiRadar_fav", JSON.stringify(favorites)); } catch(e) {} }
+
+// ─── UTILITÀ ─────────────────────────────────────────────────────────────────
+function dist(a,b,c,d) {
+  const R=6371, dL=(c-a)*Math.PI/180, dO=(d-b)*Math.PI/180;
+  const x=Math.sin(dL/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dO/2)**2;
+  return Math.round(R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x)));
+}
+function stimaQuota(lat,lon) { return Math.round(50+(Math.abs(Math.sin(lat*12.9898+lon*78.233)*43758.5453)%1)*900); }
+function probColor(p) { return p>=65?"#2d7a2d":p>=40?"#c8820a":"#888"; }
+function probBg(p) { return p>=65?"#d4edda":p>=40?"#f5e6c0":"#f5f0e8"; }
+
+function scoreToLabel(s) {
+  if(s>=70) return {label:"Alta",sub:"Condizioni molto favorevoli",color:"#2d7a2d",cls:"alta"};
+  if(s>=40) return {label:"Media",sub:"Condizioni discrete",color:"#c8820a",cls:"media"};
+  return {label:"Bassa",sub:"Condizioni non ottimali",color:"#888",cls:"bassa"};
+}
+
+function globalScore(t,u,q,soil) {
+  let s=0;
+  if(t>=8&&t<=18)s+=30; else if(t>=5&&t<=22)s+=15;
+  if(u>=70&&u<=90)s+=30; else if(u>=60)s+=15;
+  if(q>=400&&q<=1400)s+=25; else if(q>=200)s+=12;
+  if(soil.ph!=null&&soil.ph>=4.5&&soil.ph<=7)s+=15;
+  const m=new Date().getMonth();
+  if([8,9,10].includes(m))s=Math.min(100,s+10);
+  else if([2,3,4].includes(m))s=Math.min(100,s+5);
+  return Math.min(100,s);
+}
+
+function calcSpecie(t,u,q,soil,veg,month) {
+  return SPECIE_DB.map(sp => {
+    let score=0, max=0;
+    const c=sp.cond;
+    max+=30; if(t>=c.tempMin&&t<=c.tempMax)score+=30; else if(t>=c.tempMin-3&&t<=c.tempMax+3)score+=15;
+    max+=20; if(u>=c.umMin&&u<=c.umMax)score+=20; else if(u>=c.umMin-10)score+=8;
+    max+=15; if(q>=c.quotaMin&&q<=c.quotaMax)score+=15; else if(q>=c.quotaMin-200&&q<=c.quotaMax+200)score+=6;
+    max+=15; if(soil.ph!=null){if(soil.ph>=c.phMin&&soil.ph<=c.phMax)score+=15; else if(soil.ph>=c.phMin-.5&&soil.ph<=c.phMax+.5)score+=6;} else score+=7;
+    max+=10; if(soil.tipo&&sp.tipo.includes(soil.tipo))score+=10; else if(!soil.tipo)score+=5;
+    max+=20; const vm=sp.veg.filter(v=>veg.has(v)).length; if(vm>0)score+=Math.min(20,vm*10); else if(veg.size===0)score+=8;
+    const sb=sp.stagioni.includes(month)?12:sp.stagioni.includes((month+11)%12)||sp.stagioni.includes((month+1)%12)?5:0;
+    score+=sb; max+=12;
+    return {...sp, pct:Math.round((score/max)*100)};
+  }).sort((a,b)=>b.pct-a.pct);
+}
+
+function mergedSoil() {
+  const m=state.manual, s=state.soil;
+  return {ph:m.ph??s.ph, tipo:m.tipo||s.tipo, umSuolo:m.umSuolo??s.umSuolo, org:m.org??s.org};
+}
+
+// ─── API CALLS ───────────────────────────────────────────────────────────────
+async function getMeteo(lat,lon) {
+  const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,soil_moisture_0_to_1cm&timezone=auto`);
+  const d=await r.json();
+  return {
+    temp: Math.round(d.current.temperature_2m*10)/10,
+    um: d.current.relative_humidity_2m,
+    soilMoist: d.current.soil_moisture_0_to_1cm!=null ? Math.round(d.current.soil_moisture_0_to_1cm*100) : null
+  };
+}
+
+async function getSoil(lat,lon) {
+  try {
+    const r=await fetch(`https://rest.isric.org/soilgrids/v2.0/properties/query?lon=${lon}&lat=${lat}&property=phh2o&property=soc&property=clay&property=sand&depth=0-5cm&value=mean`);
+    const d=await r.json();
+    const props=d.properties?.layers;
+    if(!props) return null;
+    const get=n=>{const l=props.find(p=>p.name===n);return l?.depths?.[0]?.values?.mean??null};
+    const ph=get("phh2o"), soc=get("soc"), clay=get("clay"), sand=get("sand");
+    let tipo=null;
+    if(clay!=null&&sand!=null){const c=clay/10,s=sand/10;if(c>40)tipo="argilloso";else if(s>70)tipo="sabbioso";else if(c>20)tipo="limoso";else tipo="franco";}
+    return {ph:ph!=null?Math.round(ph/10*10)/10:null, org:soc!=null?Math.round(soc/1000*10)/10:null, tipo, source:"SoilGrids (ISRIC)"};
+  } catch(e) { return null; }
+}
+
+async function reverseGeocode(lat,lon) {
+  try {
+    const r=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`);
+    const d=await r.json();
+    const a=d.address;
+    return a.county||a.state_district||a.city||a.town||a.village||a.state||"zona";
+  } catch(e) { return "zona"; }
+}
+
+async function callClaude(prompt, useWebSearch=false) {
+  const key = getApiKey();
+  if(!key) throw new Error("No API key");
+  const body = {
+    model: CLAUDE_MODEL,
+    max_tokens: 1000,
+    messages: [{role:"user", content:prompt}]
+  };
+  if(useWebSearch) body.tools = [{type:"web_search_20250305",name:"web_search"}];
+  const r=await fetch("https://api.anthropic.com/v1/messages",{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "x-api-key": key,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true"
+    },
+    body: JSON.stringify(body)
+  });
+  if(!r.ok) {
+    const err = await r.json().catch(()=>({}));
+    throw new Error(err?.error?.message || `HTTP ${r.status}`);
+  }
+  return r.json();
+}
+
+// ─── RENDER ──────────────────────────────────────────────────────────────────
+function setStatus(msg, show=true, id="status") {
+  const el=document.getElementById(id);
+  el.style.display=show?"flex":"none";
+  if(show) document.getElementById(id+"-msg").textContent=msg;
+}
+
+function renderSoilDisplay(soil,source) {
+  const items=[
+    {l:"pH suolo",v:soil.ph??"-"},
+    {l:"Tipo suolo",v:soil.tipo||"-"},
+    {l:"Umidità suolo",v:soil.umSuolo!=null?soil.umSuolo+"%":"-"},
+    {l:"Sost. organica",v:soil.org!=null?soil.org+"%":"-"}
+  ];
+  document.getElementById("soil-display").innerHTML =
+    items.map(i=>`<div class="soil-item"><div class="soil-lbl">${i.l}</div><div class="soil-val">${i.v}</div></div>`).join("") +
+    `<div style="grid-column:1/-1"><div class="soil-source">Fonte: ${source||"—"}</div></div>`;
+}
+
+function renderSpecie(list) {
+  document.getElementById("specie-list").innerHTML = list.slice(0,8).map((sp,i)=>`
+    <div>
+      <div class="specie-row" onclick="toggleDetail(${i})" id="sr-${i}">
+        <div class="specie-icon" style="background:${probBg(sp.pct)}">${sp.icon}</div>
+        <div style="flex:1;min-width:0">
+          <div class="specie-nome">${sp.nome}</div>
+          <div class="specie-sci">${sp.sci}</div>
+        </div>
+        <div class="prob-wrap">
+          <div class="prob-pct" style="color:${probColor(sp.pct)}">${sp.pct}%</div>
+          <div class="prob-bar"><div class="prob-fill" style="width:${sp.pct}%;background:${probColor(sp.pct)}"></div></div>
+        </div>
+      </div>
+      <div class="specie-detail" id="sd-${i}">
+        <div class="dtags">${sp.tags.map(t=>`<span class="dtag">${t}</span>`).join("")}</div>
+        <div class="detail-txt">${sp.desc}</div>
+      </div>
+    </div>`).join("");
+}
+
+function toggleDetail(i) {
+  document.getElementById("sd-"+i).classList.toggle("open");
+  document.getElementById("sr-"+i).classList.toggle("open");
+}
+
+function renderSegnalazioni() {
+  const el=document.getElementById("segn-content");
+  const empty=document.getElementById("segn-empty");
+  if(!segnalazioni.length){if(empty)empty.style.display="block";return;}
+  if(empty)empty.style.display="none";
+  const tipoLabel={forum:"Forum & social",meteo:"Meteo recente",specie:"Specie avvistate",zona:"Condizioni zona"};
+  el.innerHTML=`<div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">${segnalazioni.length} segnalazioni · ${state.zona||"zona non rilevata"}</div>`+
+    segnalazioni.map(s=>`
+      <div class="segn-card">
+        <span class="segn-tipo ${s.tipo||'zona'}">${tipoLabel[s.tipo]||"Segnalazione"}</span>
+        <div class="segn-testo">${s.testo}</div>
+        ${s.fonte?`<div class="segn-fonte">Fonte: ${s.fonte}</div>`:""}
+      </div>`).join("");
+}
+
+function updateSegnBadge() {
+  document.getElementById("segn-badge").textContent = segnalazioni.length?` (${segnalazioni.length})`:"";
+}
+
+function renderFavList() {
+  const el=document.getElementById("fav-list");
+  if(!favorites.length){el.innerHTML=`<div class="empty-state">Nessun luogo preferito ancora.<br>Aggiungine uno qui sopra.</div>`;return;}
+  el.innerHTML=favorites.map(f=>{
+    const distStr=state.pos?`${dist(state.pos.lat,state.pos.lon,f.lat,f.lon)} km · `:"";
+    return`<div class="fav-card">
+      <div class="fav-header">
+        <span class="fav-nome">${f.nome}</span>
+        ${f.lastScore!=null?`<span class="badge ${f.lastCls}">${f.lastLabel} (${f.lastScore}/100)</span>`:`<span class="badge bassa">Non verificato</span>`}
+      </div>
+      <div class="fav-meta">${distStr}${f.quota}m slm${f.note?" · "+f.note:""}</div>
+      <div class="fav-foot">
+        <span class="badge ${f.notifiche!==false?"notif-on":"notif-off"}" onclick="toggleNotif(${f.id})">${f.notifiche!==false?"🔔 Notifiche on":"🔕 Notifiche off"}</span>
+        <button class="icon-btn" onclick="removeFav(${f.id})">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function updateFavBadge() {
+  document.getElementById("fav-badge").textContent = favorites.length?` (${favorites.length})`:"";
+}
+
+// ─── GEOLOCATION (Capacitor nativo o browser fallback) ───────────────────────
+async function getPosition() {
+  if(window.Capacitor && window.Capacitor.isNativePlatform()) {
+    const { Geolocation } = window.Capacitor.Plugins;
+    const p = await Geolocation.getCurrentPosition({enableHighAccuracy:true,timeout:12000});
+    return p.coords;
+  }
+  return new Promise((res,rej)=>{
+    if(!navigator.geolocation){rej(new Error("not_supported"));return;}
+    navigator.geolocation.getCurrentPosition(p=>res(p.coords),rej,{enableHighAccuracy:true,timeout:12000});
+  });
+}
+
+// ─── AZIONI PRINCIPALI ───────────────────────────────────────────────────────
+async function startLocate() {
+  const btn=document.getElementById("btn-locate");
+  btn.disabled=true; btn.innerHTML=`<div class="spinner" style="border-top-color:#fff"></div> Localizzazione...`;
+  let coords;
+  try { coords = await getPosition(); }
+  catch(e) {
+    setStatus("Impossibile ottenere la posizione. Controlla i permessi.");
+    btn.disabled=false;
+    btn.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg> Rileva posizione`;
+    return;
+  }
+  {
+    const lat=coords.latitude, lon=coords.longitude;
+    state.pos={lat,lon};
+
+    setStatus("Scarico dati meteo...");
+    let temp=15, um=65, soilMoist=null;
+    try{const m=await getMeteo(lat,lon);temp=m.temp;um=m.um;soilMoist=m.soilMoist;}catch(e){}
+    state.temp=temp; state.um=um;
+    const quota=pos.coords.altitude?Math.round(pos.coords.altitude):stimaQuota(lat,lon);
+    state.quota=quota;
+
+    setStatus("Scarico dati suolo (SoilGrids)...");
+    const soilData=await getSoil(lat,lon);
+    state.soil=soilData?{...soilData,umSuolo:soilMoist,source:soilData.source}:{ph:null,tipo:null,umSuolo:soilMoist,org:null,source:"Non disponibile"};
+
+    setStatus("Geocodifica zona...");
+    state.zona=await reverseGeocode(lat,lon);
+
+    // Render metriche
+    const soil=mergedSoil();
+    const score=globalScore(temp,um,quota,soil);
+    const {label,sub,color}=scoreToLabel(score);
+
+    document.getElementById("v-temp").innerHTML=`${temp}<span class="metric-u">°C</span>`;
+    document.getElementById("v-um").innerHTML=`${um}<span class="metric-u">%</span>`;
+    document.getElementById("v-quota").innerHTML=`${quota}<span class="metric-u">m</span>`;
+    renderSoilDisplay(soil,state.soil.source);
+    document.getElementById("s-dot").style.background=color;
+    document.getElementById("s-label").textContent=label;
+    document.getElementById("s-sub").textContent=sub;
+    const mf=document.getElementById("m-fill"); mf.style.width=score+"%"; mf.style.background=color;
+
+    const month=new Date().getMonth();
+    const spList=calcSpecie(temp,um,quota,soil,state.vegSel,month);
+    state.lastSpecie=spList;
+    document.getElementById("sp-spin").style.display="inline-block";
+    renderSpecie(spList);
+    document.getElementById("sp-spin").style.display="none";
+    document.getElementById("main-content").style.display="block";
+    if(favorites.length) document.getElementById("btn-fav-check").style.display="inline-flex";
+
+    // AI analisi
+    setStatus("Analisi AI...");
+    document.getElementById("ai-spin").style.display="inline-block";
+    try{
+      const mese=new Date().toLocaleDateString("it-IT",{month:"long"});
+      const vegStr=[...state.vegSel].join(", ")||"non specificata";
+      const top3=spList.slice(0,3).map(s=>`${s.nome} (${s.pct}%)`).join(", ");
+      const d=await callClaude(`Esperto micologo italiano. In 3-4 frasi pratiche e dirette: zona ${state.zona}, temp ${temp}°C, umidità ${um}%, quota ${quota}m, pH ${soil.ph??'N/D'}, suolo ${soil.tipo??'N/D'}, vegetazione: ${vegStr}, mese: ${mese}. Specie più probabili: ${top3}. Consigli su dove e cosa cercare. Nessun preambolo.`);
+      document.getElementById("analisi-testo").textContent=d.content?.[0]?.text||"";
+    }catch(e){document.getElementById("analisi-testo").textContent="Analisi non disponibile.";}
+    document.getElementById("ai-spin").style.display="none";
+
+    // Ricerca web
+    setStatus("Ricerca segnalazioni web...");
+    await searchWeb(false);
+    setStatus("",false);
+
+    btn.disabled=false;
+    btn.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="9" stroke-dasharray="3 3"/></svg> Aggiorna`;
+
+    if(favorites.length) checkAllFavorites();
+
+  }
+}
+
+async function searchWeb(manual=false) {
+  const btn=document.getElementById("btn-search");
+  if(btn) btn.disabled=true;
+  setStatus("Ricerca web segnalazioni...", true, "status-segn");
+
+  const zona=state.zona||"Italia";
+  const mese=new Date().toLocaleDateString("it-IT",{month:"long",year:"numeric"});
+  const top3=state.lastSpecie?state.lastSpecie.slice(0,3).map(s=>s.nome).join(", "):"porcini, gallinacci, ovuli";
+
+  try{
+    const d=await callClaude(
+      `Sei un assistente micologico. Fai ricerche web su: raccolta funghi ${zona} ${mese}, piogge recenti ${zona} funghi, specie funghi avvistate ${zona} 2026, condizioni boschi ${zona} funghi.
+Restituisci SOLO un JSON valido con questa struttura (nessun testo prima o dopo):
+{"segnalazioni":[{"tipo":"forum","testo":"...","fonte":"..."},{"tipo":"meteo","testo":"...","fonte":"..."},{"tipo":"specie","testo":"...","fonte":"..."},{"tipo":"zona","testo":"...","fonte":"..."}]}
+I tipi validi sono: forum, meteo, specie, zona. Includi 6-8 segnalazioni totali, concise (max 2 frasi ciascuna).`,
+      true
+    );
+    const texts=d.content.filter(b=>b.type==="text").map(b=>b.text).join("");
+    const match=texts.replace(/```json|```/g,"").trim().match(/\{[\s\S]*\}/);
+    if(match){
+      const parsed=JSON.parse(match[0]);
+      segnalazioni=parsed.segnalazioni||[];
+    }
+  }catch(e){
+    segnalazioni=[{tipo:"zona",testo:"Ricerca web non disponibile al momento. Riprova tra qualche secondo.",fonte:""}];
+  }
+
+  setStatus("",false,"status-segn");
+  renderSegnalazioni();
+  updateSegnBadge();
+  if(btn){btn.disabled=false;}
+  if(manual) switchTab("segnalazioni");
+}
+
+async function checkAllFavorites() {
+  if(!state.pos||!favorites.length) return;
+  document.getElementById("btn-fav-check").disabled=true;
+  setStatus("Controllo preferiti...");
+  const alerts=[];
+  for(const fav of favorites){
+    try{
+      const m=await getMeteo(fav.lat,fav.lon);
+      const s=await getSoil(fav.lat,fav.lon);
+      const soil=s||{ph:null,tipo:null};
+      const sc=globalScore(m.temp,m.um,fav.quota,soil);
+      const lbl=scoreToLabel(sc);
+      fav.lastScore=sc; fav.lastCls=lbl.cls; fav.lastLabel=lbl.label;
+      if(sc>=40){
+        alerts.push({nome:fav.nome,label:lbl.label,cls:lbl.cls,score:sc,quota:fav.quota,dist:dist(state.pos.lat,state.pos.lon,fav.lat,fav.lon)});
+        if(fav.notifiche!==false) sendPush(fav.nome,lbl.label,sc);
+      }
+    }catch(e){}
+  }
+  saveFavs();
+  setStatus("",false);
+  document.getElementById("alert-banners").innerHTML=alerts.map(a=>`
+    <div class="alert-banner ${a.cls}">
+      <div class="alert-title">Condizioni ${a.label.toLowerCase()} — ${a.nome}</div>
+      <div class="alert-body">${a.dist} km · ${a.quota}m slm · Score ${a.score}/100</div>
+    </div>`).join("");
+  renderFavList();
+  document.getElementById("btn-fav-check").disabled=false;
+}
+
+function sendPush(nome,label,score){
+  if(notifPerm!=="granted") return;
+  try{new Notification(`🍄 Funghi Radar: ${label} a ${nome}`,{body:`Score ${score}/100 — vale la pena andare!`});}catch(e){}
+}
+
+function applyManual(){
+  state.manual={
+    ph:parseFloat(document.getElementById("m-ph").value)||null,
+    tipo:document.getElementById("m-tipo").value||null,
+    umSuolo:parseFloat(document.getElementById("m-umsuolo").value)||null,
+    org:parseFloat(document.getElementById("m-org").value)||null
+  };
+  if(state.temp!=null){
+    const soil=mergedSoil();
+    renderSoilDisplay(soil,(state.soil.source||"")+" + manuale");
+    const sp=calcSpecie(state.temp,state.um,state.quota,soil,state.vegSel,new Date().getMonth());
+    state.lastSpecie=sp; renderSpecie(sp);
+    const ok=document.getElementById("manual-ok"); ok.style.display="inline"; setTimeout(()=>ok.style.display="none",2500);
+  }
+}
+
+function initVeg(){
+  document.getElementById("veg-grid").innerHTML=VEG_OPTIONS.map(v=>`
+    <button class="veg-btn" id="vb-${v.id}" onclick="toggleVeg('${v.id}')">${v.icon} ${v.lbl}</button>`).join("");
+}
+
+function toggleVeg(id){
+  if(state.vegSel.has(id)) state.vegSel.delete(id); else state.vegSel.add(id);
+  document.getElementById("vb-"+id).classList.toggle("sel",state.vegSel.has(id));
+  if(state.temp!=null){
+    const soil=mergedSoil();
+    const sp=calcSpecie(state.temp,state.um,state.quota,soil,state.vegSel,new Date().getMonth());
+    state.lastSpecie=sp; renderSpecie(sp);
+  }
+}
+
+function addFav(){
+  const nome=document.getElementById("f-nome").value.trim();
+  const lat=parseFloat(document.getElementById("f-lat").value);
+  const lon=parseFloat(document.getElementById("f-lon").value);
+  const quota=parseInt(document.getElementById("f-quota").value)||stimaQuota(lat,lon);
+  const note=document.getElementById("f-note").value.trim();
+  const err=document.getElementById("fav-err");
+  if(!nome||isNaN(lat)||isNaN(lon)){err.textContent="Nome e coordinate sono obbligatori.";err.style.display="inline";return;}
+  err.style.display="none";
+  favorites.push({id:Date.now(),nome,lat,lon,quota,note,notifiche:true,lastScore:null,lastCls:null,lastLabel:null});
+  saveFavs(); renderFavList(); updateFavBadge();
+  ["f-nome","f-lat","f-lon","f-quota","f-note"].forEach(id=>document.getElementById(id).value="");
+}
+
+function removeFav(id){favorites=favorites.filter(f=>f.id!==id);saveFavs();renderFavList();updateFavBadge();}
+function toggleNotif(id){const f=favorites.find(f=>f.id===id);if(f){f.notifiche=!f.notifiche;saveFavs();renderFavList();}}
+function useGPS(){
+  if(!state.pos){alert("Prima rileva la posizione nel tab Radar.");return;}
+  document.getElementById("f-lat").value=state.pos.lat.toFixed(5);
+  document.getElementById("f-lon").value=state.pos.lon.toFixed(5);
+  document.getElementById("f-quota").value=state.quota;
+}
+
+function checkNotifPerm(){
+  if(!("Notification" in window)){notifPerm="unsupported";return;}
+  notifPerm=Notification.permission;
+  const el=document.getElementById("notif-bar-wrap");
+  if(notifPerm==="granted"||notifPerm==="unsupported"){el.innerHTML="";return;}
+  el.innerHTML=`<div class="notif-bar">
+    <span>Abilita le notifiche push per ricevere allarmi sui preferiti.</span>
+    <button class="btn btn-primary" style="padding:7px 13px;font-size:12px" onclick="reqNotif()">Abilita</button>
+  </div>`;
+}
+async function reqNotif(){notifPerm=await Notification.requestPermission();checkNotifPerm();renderFavList();}
+
+function switchTab(t){
+  ["radar","segnalazioni","terreno","preferiti"].forEach(n=>{
+    document.querySelector(`.tab[onclick="switchTab('${n}')"]`).classList.toggle("active",n===t);
+    document.getElementById("panel-"+n).classList.toggle("active",n===t);
+  });
+  if(t==="preferiti"){checkNotifPerm();renderFavList();}
+  if(t==="segnalazioni"&&segnalazioni.length) renderSegnalazioni();
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+initApiKeyUI(); initVeg(); renderFavList(); updateFavBadge();
+</script>
+</body>
+</html>
