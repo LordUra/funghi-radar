@@ -1646,8 +1646,16 @@ async function verificaFav(id) {
     if(elevRes.status==="fulfilled" && elevRes.value!=null && !fav.quotaManuale) {
       fav.quota = elevRes.value;
     }
-    const soil = s||{ph:null,tipo:null};
-    const piogge = {pioggia10:m.pioggia10, pioggia3:m.pioggia3, giorniSeccita:m.giorniSeccita??0};
+    // Suolo: le impostazioni salvate nel preferito hanno PRIORITÀ sui dati API
+    const soilAPI = s||{ph:null,tipo:null,org:null,source:"OpenLandMap"};
+    const soil = {
+      ph:      fav.ph       ?? soilAPI.ph,
+      tipo:    fav.tipoSuolo || soilAPI.tipo,
+      org:     soilAPI.org,
+      umSuolo: m.soilMoist  ?? soilAPI.umSuolo,
+      source:  (fav.tipoSuolo||fav.ph) ? (soilAPI.source||"OpenLandMap")+" + preferito" : soilAPI.source
+    };
+    const piogge = {pioggia14:m.pioggia14||0, pioggia10:m.pioggia10||0, pioggia3:m.pioggia3||0, giorniSeccita:m.giorniSeccita??0};
     // Calcola specie prima, poi globalScore tiene conto della stagione
     const vegSet = new Set(fav.veg||[]);
     const month = new Date().getMonth();
@@ -2305,6 +2313,13 @@ function populateRadarFromFav(fav, m, soil, piogge, spList, score) {
   state.zona = fav.nome;
   state.vegSel = new Set(fav.veg||[]);
   state.lastSpecie = spList;
+  // Imposta state.manual con i valori del preferito così mergedSoil() li usa
+  state.manual = {
+    ph: fav.ph||null,
+    tipo: fav.tipoSuolo||null,
+    umSuolo: null,
+    org: null
+  };
 
   // Aggiorna campo coordinate nel Radar
   document.getElementById("coords-input").value = fav.lat.toFixed(6)+", "+fav.lon.toFixed(6);
@@ -2384,9 +2399,22 @@ function applyManual(){
   };
   if(state.temp!=null){
     const soil=mergedSoil();
+    const month=new Date().getMonth();
+    const sp2=calcSpecie(state.temp,state.um,state.quota,soil,state.vegSel,month,state.piogge||{});
+    state.lastSpecie=sp2;
+    const score=globalScore(state.temp,state.um,state.quota,soil,{...(state.piogge||{}),extra:state.extra||{}},sp2);
+    const {label,sub,color}=scoreToLabel(score);
+    // Aggiorna semaforo
+    document.getElementById("s-dot").style.background=color;
+    document.getElementById("s-label").textContent=label;
+    document.getElementById("s-sub").textContent=sub+(state.zona?" · "+state.zona:"");
+    const mf=document.getElementById("m-fill"); mf.style.width=score+"%"; mf.style.background=color;
+    // Aggiorna display suolo e specie
     renderSoilDisplay(soil,(state.soil.source||"")+" + manuale",state.piogge||{});
-    const sp2=calcSpecie(state.temp,state.um,state.quota,soil,state.vegSel,new Date().getMonth(),state.piogge);
-    state.lastSpecie=sp2; renderSpecie(sp2);
+    renderSpecie(sp2);
+    renderScoreDetail(state.temp,state.um,state.quota,soil,state.piogge||{},sp2,score);
+    // Vai al tab Radar per vedere i risultati
+    switchTab("radar");
     const ok=document.getElementById("manual-ok"); ok.style.display="inline"; setTimeout(()=>ok.style.display="none",2500);
   }
 }
