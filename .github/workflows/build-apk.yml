@@ -44,7 +44,7 @@ jobs:
             sed -i 's/<application/<uses-permission android:name="android.permission.INTERNET"\/>\n    <application/' $FILE
           fi
 
-      - name: Install imagemagick for icon resize
+      - name: Install imagemagick
         run: sudo apt-get install -y imagemagick
 
       - name: Copy app icon
@@ -65,8 +65,6 @@ jobs:
               convert $ICON -resize ${SIZE}x${SIZE} $DEST/ic_launcher_round.png
               echo "Icon $dir: ${SIZE}x${SIZE} OK"
             done
-          else
-            echo "No icon.png found in www/, skipping"
           fi
 
       - name: Generate keystore
@@ -88,19 +86,31 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleRelease
 
-      - name: Sign and align APK
+      - name: Sign APK with apksigner
         run: |
           APK=android/app/build/outputs/apk/release/app-release-unsigned.apk
-          ALIGNED=android/app/build/outputs/apk/release/funghi-radar-release.apk
-          jarsigner \
-            -sigalg SHA256withRSA \
-            -digestalg SHA-256 \
-            -keystore $GITHUB_WORKSPACE/funghi-radar.keystore \
-            -storepass funghiradar123 \
-            -keypass funghiradar123 \
-            $APK funghi-radar
+          ALIGNED=android/app/build/outputs/apk/release/app-release-aligned.apk
+          SIGNED=android/app/build/outputs/apk/release/funghi-radar-release.apk
+
+          # Find zipalign and apksigner
           ZIPALIGN=$(find $ANDROID_SDK_ROOT -name "zipalign" -type f | head -1)
+          APKSIGNER=$(find $ANDROID_SDK_ROOT -name "apksigner" -type f | head -1)
+          echo "zipalign: $ZIPALIGN"
+          echo "apksigner: $APKSIGNER"
+
+          # Step 1: align first
           $ZIPALIGN -v 4 $APK $ALIGNED
+
+          # Step 2: sign with apksigner (v2 signature)
+          $APKSIGNER sign \
+            --ks $GITHUB_WORKSPACE/funghi-radar.keystore \
+            --ks-pass pass:funghiradar123 \
+            --key-pass pass:funghiradar123 \
+            --ks-key-alias funghi-radar \
+            --out $SIGNED \
+            $ALIGNED
+
+          echo "APK signed successfully"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
