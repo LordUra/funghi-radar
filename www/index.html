@@ -1739,9 +1739,6 @@ function editFav(id) {
   const ts = document.getElementById("f-tipo-suolo");
   if(ts) ts.value = fav.tipoSuolo||"";
   setFavVeg(fav.veg||[]);
-  // Rimuovi il preferito esistente (verrà ricreato al salvataggio)
-  favorites = favorites.filter(f=>f.id!==id);
-  saveFavs(); renderFavList(); updateFavBadge();
   // Scrolla al form
   document.querySelector(".add-form")?.scrollIntoView({behavior:"smooth"});
 }
