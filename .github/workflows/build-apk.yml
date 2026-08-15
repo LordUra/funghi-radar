@@ -26,6 +26,111 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Install dependencies
+        run: npm install
+
+      - name: Add Android platform
+        run: |
+          npx cap add android || true
+          npx cap sync android
+
+      - name: Fix AndroidManifest permissions
+        run: |
+          FILE=android/app/src/main/AndroidManifest.xml
+          if ! grep -q "INTERNET" $FILE; then
+            sed -i 's/<application/<uses-permission android:name="android.permission.INTERNET"\/>\n    <application/' $FILE
+          fi
+
+      - name: Install imagemagick
+        run: sudo apt-get install -y imagemagick
+
+      - name: Copy app icon
+        run: |
+          ICON=www/icon.png
+          if [ -f "$ICON" ]; then
+            for dir in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+              case $dir in
+                mdpi)    SIZE=48  ;;
+                hdpi)    SIZE=72  ;;
+                xhdpi)   SIZE=96  ;;
+                xxhdpi)  SIZE=144 ;;
+                xxxhdpi) SIZE=192 ;;
+              esac
+              DEST="android/app/src/main/res/mipmap-$dir"
+              mkdir -p $DEST
+              convert $ICON -resize ${SIZE}x${SIZE} $DEST/ic_launcher.png
+              convert $ICON -resize ${SIZE}x${SIZE} $DEST/ic_launcher_round.png
+              echo "Icon $dir: ${SIZE}x${SIZE} OK"
+            done
+          fi
+
+      - name: Generate keystore
+        run: |
+          keytool -genkeypair \
+            -v \
+            -keystore funghi-radar.keystore \
+            -alias funghi-radar \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -storepass funghiradar123 \
+            -keypass funghiradar123 \
+            -dname "CN=FunghiRadar, OU=Dev, O=FunghiRadar, L=Roma, ST=Lazio, C=IT"
+
+      - name: Build Release APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleRelease
+
+      - name: Sign APK
+        run: |
+          APK=android/app/build/outputs/apk/release/app-release-unsigned.apk
+          ALIGNED=android/app/build/outputs/apk/release/app-release-aligned.apk
+          SIGNED=android/app/build/outputs/apk/release/funghi-radar-release.apk
+          ZIPALIGN=$(find $ANDROID_SDK_ROOT -name "zipalign" -type f | head -1)
+          APKSIGNER=$(find $ANDROID_SDK_ROOT -name "apksigner" -type f | head -1)
+          $ZIPALIGN -v 4 $APK $ALIGNED
+          $APKSIGNER sign \
+            --ks $GITHUB_WORKSPACE/funghi-radar.keystore \
+            --ks-pass pass:funghiradar123 \
+            --key-pass pass:funghiradar123 \
+            --ks-key-alias funghi-radar \
+            --out $SIGNED \
+            $ALIGNED
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: funghi-radar-release
+          path: android/app/build/outputs/apk/release/funghi-radar-release.apkname: Build APK
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
       - name: Install Capacitor
         run: npm install @capacitor/core @capacitor/cli @capacitor/android
 
