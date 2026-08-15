@@ -44,7 +44,7 @@ jobs:
       - name: Install imagemagick
         run: sudo apt-get install -y imagemagick
 
-      - name: Copy app icon
+      - name: Copy app icon (after cap sync to avoid overwrite)
         run: |
           ICON=www/icon.png
           if [ -f "$ICON" ]; then
@@ -60,7 +60,10 @@ jobs:
               mkdir -p $DEST
               convert $ICON -resize ${SIZE}x${SIZE} $DEST/ic_launcher.png
               convert $ICON -resize ${SIZE}x${SIZE} $DEST/ic_launcher_round.png
+              echo "Icon $dir: ${SIZE}x${SIZE} OK"
             done
+          else
+            echo "No icon.png found in www/"
           fi
 
       - name: Generate keystore
