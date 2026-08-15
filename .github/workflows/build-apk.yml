@@ -3,56 +3,92 @@ name: Build APK
 on:
   push:
     branches: [ main ]
-  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js 20
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: Setup Java 17
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
           distribution: 'temurin'
+          java-version: '17'
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install npm dependencies
-        run: npm install
+      - name: Install dependencies
+        run: |
+          cd funghi-radar-app
+          npm install
+
+      - name: Build web assets
+        run: |
+          cd funghi-radar-app
+          cp www/index.html www/index.html.bak || true
+          # Ensure www directory has the latest index.html
+          ls www/
 
       - name: Add Android platform
-        run: npx cap add android
-
-      - name: Sync web assets to Android
-        run: npx cap sync android
-
-      - name: Add Geolocation permissions
         run: |
-          MANIFEST="android/app/src/main/AndroidManifest.xml"
-          if ! grep -q "ACCESS_FINE_LOCATION" "$MANIFEST"; then
-            sed -i 's|<application|<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>\n    <application|' "$MANIFEST"
+          cd funghi-radar-app
+          npx cap add android || true
+          npx cap sync android
+
+      - name: Fix AndroidManifest permissions
+        run: |
+          cd funghi-radar-app/android/app/src/main
+          # Add internet permission if not present
+          if ! grep -q "INTERNET" AndroidManifest.xml; then
+            sed -i 's/<application/<uses-permission android:name="android.permission.INTERNET"\/>\n    <application/' AndroidManifest.xml
           fi
 
-      - name: Make Gradle executable
-        run: chmod +x android/gradlew
+      - name: Generate keystore
+        run: |
+          keytool -genkeypair \
+            -v \
+            -keystore funghi-radar.keystore \
+            -alias funghi-radar \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -storepass funghiradar123 \
+            -keypass funghiradar123 \
+            -dname "CN=FunghiRadar, OU=Dev, O=FunghiRadar, L=Roma, ST=Lazio, C=IT"
 
-      - name: Build debug APK
-        working-directory: android
-        run: ./gradlew assembleDebug --no-daemon
+      - name: Build Release APK
+        run: |
+          cd funghi-radar-app/android
+          chmod +x gradlew
+          ./gradlew assembleRelease
+
+      - name: Sign APK
+        run: |
+          cd funghi-radar-app/android/app/build/outputs/apk/release
+          # Sign the APK
+          jarsigner \
+            -verbose \
+            -sigalg SHA256withRSA \
+            -digestalg SHA-256 \
+            -keystore /home/runner/work/funghi-radar/funghi-radar/funghi-radar.keystore \
+            -storepass funghiradar123 \
+            -keypass funghiradar123 \
+            app-release-unsigned.apk \
+            funghi-radar
+          # Align the APK
+          zipalign -v 4 app-release-unsigned.apk funghi-radar-signed.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: funghi-radar-debug
-          path: android/app/build/outputs/apk/debug/app-debug.apk
-          retention-days: 30
+          name: funghi-radar-release
+          path: funghi-radar-app/android/app/build/outputs/apk/release/funghi-radar-signed.apk
