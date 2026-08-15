@@ -1723,9 +1723,12 @@ function showBackupMsg(msg) {
   setTimeout(()=>el.style.display="none", 3000);
 }
 
+var editingFavId = null;
+
 function editFav(id) {
   const fav = favorites.find(f=>f.id===id);
   if(!fav) return;
+  editingFavId = id;
   // Pre-popola il form
   document.getElementById("f-nome").value = fav.nome||"";
   document.getElementById("f-lat").value = fav.lat||"";
@@ -2441,7 +2444,15 @@ function addFav(){
   const err=document.getElementById("fav-err");
   if(!nome||isNaN(lat)||isNaN(lon)){err.textContent="Nome e coordinate sono obbligatori.";err.style.display="inline";return;}
   err.style.display="none";
-  favorites.push({id:Date.now(),nome,lat,lon,quota,quotaManuale:false,note,veg:vegList,tipoSuolo:tipoSuolo||null,ph:phManuale||null,notifiche:true,lastScore:null,lastCls:null,lastLabel:null,lastSpecie:null});
+  if(editingFavId !== null) {
+    const idx = favorites.findIndex(f=>f.id===editingFavId);
+    if(idx >= 0) favorites[idx] = {...favorites[idx], nome, lat, lon, quota, note, veg:vegList, tipoSuolo:tipoSuolo||null, ph:phManuale||null};
+    editingFavId = null;
+    const btnSave = document.querySelector('.add-form .btn-primary');
+    if(btnSave) { btnSave.textContent="Aggiungi"; btnSave.style.background=""; }
+  } else {
+    favorites.push({id:Date.now(),nome,lat,lon,quota,quotaManuale:false,note,veg:vegList,tipoSuolo:tipoSuolo||null,ph:phManuale||null,notifiche:true,lastScore:null,lastCls:null,lastLabel:null,lastSpecie:null});
+  }
   saveFavs(); renderFavList(); updateFavBadge();
   ["f-nome","f-lat","f-lon","f-quota","f-note","f-ph"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
   const ts=document.getElementById("f-tipo-suolo");if(ts)ts.value="";
