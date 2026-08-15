@@ -44,6 +44,31 @@ jobs:
             sed -i 's/<application/<uses-permission android:name="android.permission.INTERNET"\/>\n    <application/' $FILE
           fi
 
+      - name: Install imagemagick for icon resize
+        run: sudo apt-get install -y imagemagick
+
+      - name: Copy app icon
+        run: |
+          ICON=www/icon.png
+          if [ -f "$ICON" ]; then
+            for dir in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+              case $dir in
+                mdpi)    SIZE=48  ;;
+                hdpi)    SIZE=72  ;;
+                xhdpi)   SIZE=96  ;;
+                xxhdpi)  SIZE=144 ;;
+                xxxhdpi) SIZE=192 ;;
+              esac
+              DEST="android/app/src/main/res/mipmap-$dir"
+              mkdir -p $DEST
+              convert $ICON -resize ${SIZE}x${SIZE} $DEST/ic_launcher.png
+              convert $ICON -resize ${SIZE}x${SIZE} $DEST/ic_launcher_round.png
+              echo "Icon $dir: ${SIZE}x${SIZE} OK"
+            done
+          else
+            echo "No icon.png found in www/, skipping"
+          fi
+
       - name: Generate keystore
         run: |
           keytool -genkeypair \
@@ -66,10 +91,7 @@ jobs:
       - name: Sign and align APK
         run: |
           APK=android/app/build/outputs/apk/release/app-release-unsigned.apk
-          SIGNED=android/app/build/outputs/apk/release/funghi-radar-signed.apk
           ALIGNED=android/app/build/outputs/apk/release/funghi-radar-release.apk
-
-          # Sign
           jarsigner \
             -sigalg SHA256withRSA \
             -digestalg SHA-256 \
@@ -77,10 +99,7 @@ jobs:
             -storepass funghiradar123 \
             -keypass funghiradar123 \
             $APK funghi-radar
-
-          # Find zipalign in Android SDK
           ZIPALIGN=$(find $ANDROID_SDK_ROOT -name "zipalign" -type f | head -1)
-          echo "zipalign found at: $ZIPALIGN"
           $ZIPALIGN -v 4 $APK $ALIGNED
 
       - name: Upload APK
