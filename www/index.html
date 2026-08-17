@@ -1773,44 +1773,58 @@ async function verificaFav(id) {
   const fav = favorites.find(f=>f.id===id);
   if(!fav) return;
   const btn = document.getElementById("vbtn-"+id);
+  const resetBtn = () => { if(btn) { btn.disabled=false; btn.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l5 5L20 7"/></svg> Verifica'; }};
   if(btn) { btn.disabled=true; btn.innerHTML='<div class="spinner"></div>'; }
+  const safetyTimer = setTimeout(resetBtn, 25000);
   try {
-    const [meteoRes, soilRes, elevRes] = await Promise.allSettled([
-      getMeteoMulti(fav.lat, fav.lon),
-      getSoilMulti(fav.lat, fav.lon),
-      getElevationMulti(fav.lat, fav.lon)
-    ]);
-    const m = (meteoRes.status==="fulfilled" && meteoRes.value) ? meteoRes.value : {temp:15,um:65,soilMoist:null,pioggia14:0,pioggia10:0,pioggia3:0,giorniSeccita:0,giorni7:[]};
-    const s = soilRes.status==="fulfilled" ? soilRes.value : null;
-    // Aggiorna quota con dato reale SRTM se non inserita manualmente
-    if(elevRes.status==="fulfilled" && elevRes.value!=null && !fav.quotaManuale) {
-      fav.quota = elevRes.value;
+    let m = {temp:15,um:65,pioggia14:0,pioggia10:0,pioggia3:0,giorniSeccita:0,giorni7:[],tNotte:null,tGiorno:null,tPesata:null,faseNascita:null,qualitaPioggia:null,mmUltimi24h:0};
+    let meteoFallito = false;
+    try {
+      const r = await Promise.race([getMeteoMulti(fav.lat,fav.lon), new Promise(res=>setTimeout(()=>res(null),18000))]);
+      if(r) m = r; else meteoFallito = true;
+    } catch(e) { meteoFallito = true; }
+    if(meteoFallito) {
+      if(btn) btn.innerHTML = '⚠ Dati meteo non disponibili — uso valori di default';
+      await new Promise(r=>setTimeout(r,2000));
+      if(btn) btn.innerHTML = '<div class="spinner"></div>';
     }
+    let s = null;
+    try {
+      s = await Promise.race([getSoilMulti(fav.lat,fav.lon), new Promise(res=>setTimeout(()=>res(null),12000))]);
+    } catch(e) {}
+    try {
+      if(!fav.quotaManuale) {
+        const elev = await Promise.race([getElevationMulti(fav.lat,fav.lon), new Promise(res=>setTimeout(()=>res(null),10000))]);
+        if(elev!=null) fav.quota=elev;
+      }
+    } catch(e) {}
     const soil = s||{ph:null,tipo:null};
     const piogge = {
-      pioggia14:m.pioggia14||0, pioggia10:m.pioggia10||0,
-      pioggia3:m.pioggia3||0, giorniSeccita:m.giorniSeccita??0,
+      pioggia14:m.pioggia14||0,pioggia10:m.pioggia10||0,pioggia3:m.pioggia3||0,
+      giorniSeccita:m.giorniSeccita??0,
       pressione:{valore:m.pressione,tendenza:m.tendenzaPressione},
-      tNotte:m.tNotte??null, tGiorno:m.tGiorno??null, tPesata:m.tPesata??null,
-      faseNascita:m.faseNascita??null, qualitaPioggia:m.qualitaPioggia??null,
+      tNotte:m.tNotte??null,tGiorno:m.tGiorno??null,tPesata:m.tPesata??null,
+      faseNascita:m.faseNascita??null,qualitaPioggia:m.qualitaPioggia??null,
       mmUltimi24h:m.mmUltimi24h||0,
     };
-    // Calcola specie prima, poi globalScore tiene conto della stagione
-    const vegSet = new Set(fav.veg||[]);
-    const month = new Date().getMonth();
-    const spList = calcSpecie(m.temp, m.um, fav.quota, soil, vegSet, month, piogge);
-    const sc = globalScore(m.temp, m.um, fav.quota, soil, piogge, spList);
-    const lbl = scoreToLabel(sc);
-    fav.lastScore=sc; fav.lastCls=lbl.cls; fav.lastLabel=lbl.label;
+    const vegSet=new Set(fav.veg||[]);
+    const month=new Date().getMonth();
+    const spList=calcSpecie(m.temp,m.um,fav.quota,soil,vegSet,month,piogge);
+    const sc=globalScore(m.temp,m.um,fav.quota,soil,piogge,spList);
+    const lbl=scoreToLabel(sc);
+    fav.lastScore=sc;fav.lastCls=lbl.cls;fav.lastLabel=lbl.label;
     fav.lastSpecie=spList.slice(0,3).map(sp=>({nome:sp.nome,pct:sp.pct,icon:sp.icon}));
-    fav.lastTemp=m.temp; fav.lastUm=m.um;
-    fav.lastPiogge={pioggia10:m.pioggia10,giorniSeccita:m.giorniSeccita??0};
-    saveFavs(); renderFavList();
-    if(sc>=40 && fav.notifiche!==false) sendPush(fav.nome, lbl.label, sc);
-    // Popola il tab Radar con i dati verificati
-    populateRadarFromFav(fav, m, soil, piogge, spList, sc);
-  } catch(e) { console.error(e); }
+    saveFavs();renderFavList();
+    if(sc>=40&&fav.notifiche!==false) sendPush(fav.nome,lbl.label,sc);
+    populateRadarFromFav(fav,m,soil,piogge,spList,sc);
+  } catch(e) {
+    console.error(e);
+  } finally {
+    clearTimeout(safetyTimer);
+    resetBtn();
+  }
 }
+
 
 function esportaPreferiti() {
   if(!favorites.length) { alert("Nessun preferito da esportare."); return; }
