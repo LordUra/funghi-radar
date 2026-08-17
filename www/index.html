@@ -872,7 +872,12 @@ function scoreToLabel(s) {
 function globalScore(t,u,q,soil,piogge={},spList) {
   // Calcola score base su meteo/suolo/piogge
   let s=0;
-  if(t>=8&&t<=18)s+=30; else if(t>=5&&t<=22)s+=15;
+  // Temperatura pesata notturna/diurna
+  const tEff2 = piogge?.tPesata ?? t;
+  const tN2 = piogge?.tNotte ?? t;
+  if(tN2>=6&&tN2<=14) s+=30;        // notte fresca = ideale
+  else if(tEff2>=8&&tEff2<=18) s+=20;
+  else if(tEff2>=5&&tEff2<=22) s+=10;
   if(u>=70&&u<=90)s+=25; else if(u>=60)s+=12;
   if(q>=400&&q<=1400)s+=20; else if(q>=200)s+=10;
   if(soil.ph!=null&&soil.ph>=4.5&&soil.ph<=7)s+=10;
@@ -924,7 +929,18 @@ function calcSpecie(t,u,q,soil,veg,month,piogge={}) {
   return SPECIE_DB.map(sp => {
     let score=0, max=0;
     const c=sp.cond;
-    max+=30; if(t>=c.tempMin&&t<=c.tempMax)score+=30; else if(t>=c.tempMin-3&&t<=c.tempMax+3)score+=15;
+    // Temperatura pesata: 60% notte + 40% giorno se disponibile, altrimenti temp corrente
+    const tEff = piogge.tPesata ?? t;
+    const tN = piogge.tNotte ?? t;
+    const tG = piogge.tGiorno ?? t;
+    // Notte: range ideale spostato verso il basso (micelio ama il fresco notturno)
+    const notteOk = tN >= (c.tempMin-2) && tN <= (c.tempMax-4);
+    const giornoOk = tG >= c.tempMin && tG <= (c.tempMax+2);
+    max+=30;
+    if(notteOk && giornoOk) score+=30;          // entrambe ottimali
+    else if(notteOk || giornoOk) score+=20;      // una delle due ottimale
+    else if(tEff>=c.tempMin-3&&tEff<=c.tempMax+3) score+=12; // range accettabile
+    // else 0
     max+=20; if(u>=c.umMin&&u<=c.umMax)score+=20; else if(u>=c.umMin-10)score+=8;
     max+=15;
     if(q>=c.quotaMin&&q<=c.quotaMax) score+=15;
@@ -1191,7 +1207,7 @@ async function getMeteo(lat,lon) {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`
     + `&current=temperature_2m,relative_humidity_2m,soil_moisture_0_to_1cm,surface_pressure`
     + `&current=soil_temperature_0cm,wind_speed_10m,cloud_cover`
-    + `&hourly=surface_pressure`
+    + `&hourly=surface_pressure,temperature_2m`
     + `&daily=precipitation_sum,temperature_2m_max,temperature_2m_min,relative_humidity_2m_max`
     + `&past_days=14&forecast_days=1`
     + `&timezone=auto`;
@@ -1239,6 +1255,29 @@ async function getMeteo(lat,lon) {
   const tMax0 = d.daily?.temperature_2m_max?.[d.daily.temperature_2m_max.length-1];
   const tMin0 = d.daily?.temperature_2m_min?.[d.daily.temperature_2m_min.length-1];
   const escursione = (tMax0!=null && tMin0!=null) ? Math.round((tMax0-tMin0)*10)/10 : null;
+  // Calcola T media notturna (22-06) e diurna (06-22) sulle ultime 24h
+  const tempHourly = d.hourly?.temperature_2m || [];
+  const nH2 = tempHourly.length;
+  let tNotte = null, tGiorno = null;
+  if(nH2 >= 24) {
+    // Ultime 24h: indici nH2-24 ... nH2-1
+    // Ore notturne: 22,23,0,1,2,3,4,5,6 → in finestra 24h = ore 22-23 del giorno prima + 0-6 di oggi
+    const notteOre = [22,23,0,1,2,3,4,5,6]; // indici ora del giorno
+    const giornoOre = [7,8,9,10,11,12,13,14,15,16,17,18,19,20,21]; // 07-21
+    const notteVals = [], giornoVals = [];
+    for(let i = nH2-24; i < nH2; i++) {
+      const ora = i % 24;
+      if(notteOre.includes(ora) && tempHourly[i] != null) notteVals.push(tempHourly[i]);
+      if(giornoOre.includes(ora) && tempHourly[i] != null) giornoVals.push(tempHourly[i]);
+    }
+    if(notteVals.length) tNotte = Math.round(notteVals.reduce((a,b)=>a+b,0)/notteVals.length*10)/10;
+    if(giornoVals.length) tGiorno = Math.round(giornoVals.reduce((a,b)=>a+b,0)/giornoVals.length*10)/10;
+  }
+  // Temperatura pesata: 60% notte + 40% giorno (se disponibili)
+  const tPesata = (tNotte!=null && tGiorno!=null)
+    ? Math.round((tNotte*0.6 + tGiorno*0.4)*10)/10
+    : null;
+
   return {
     temp: Math.round(d.current.temperature_2m*10)/10,
     um: d.current.relative_humidity_2m,
@@ -1256,6 +1295,9 @@ async function getMeteo(lat,lon) {
     escursione,
     tMax: tMax0!=null ? Math.round(tMax0*10)/10 : null,
     tMin: tMin0!=null ? Math.round(tMin0*10)/10 : null,
+    tNotte,
+    tGiorno,
+    tPesata,
   };
 }
 
@@ -1463,7 +1505,7 @@ async function getMeteo(lat,lon) {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`
     + `&current=temperature_2m,relative_humidity_2m,soil_moisture_0_to_1cm,surface_pressure`
     + `&current=soil_temperature_0cm,wind_speed_10m,cloud_cover`
-    + `&hourly=surface_pressure`
+    + `&hourly=surface_pressure,temperature_2m`
     + `&daily=precipitation_sum,temperature_2m_max,temperature_2m_min,relative_humidity_2m_max`
     + `&past_days=14&forecast_days=1`
     + `&timezone=auto`;
@@ -1511,6 +1553,29 @@ async function getMeteo(lat,lon) {
   const tMax0 = d.daily?.temperature_2m_max?.[d.daily.temperature_2m_max.length-1];
   const tMin0 = d.daily?.temperature_2m_min?.[d.daily.temperature_2m_min.length-1];
   const escursione = (tMax0!=null && tMin0!=null) ? Math.round((tMax0-tMin0)*10)/10 : null;
+  // Calcola T media notturna (22-06) e diurna (06-22) sulle ultime 24h
+  const tempHourly = d.hourly?.temperature_2m || [];
+  const nH2 = tempHourly.length;
+  let tNotte = null, tGiorno = null;
+  if(nH2 >= 24) {
+    // Ultime 24h: indici nH2-24 ... nH2-1
+    // Ore notturne: 22,23,0,1,2,3,4,5,6 → in finestra 24h = ore 22-23 del giorno prima + 0-6 di oggi
+    const notteOre = [22,23,0,1,2,3,4,5,6]; // indici ora del giorno
+    const giornoOre = [7,8,9,10,11,12,13,14,15,16,17,18,19,20,21]; // 07-21
+    const notteVals = [], giornoVals = [];
+    for(let i = nH2-24; i < nH2; i++) {
+      const ora = i % 24;
+      if(notteOre.includes(ora) && tempHourly[i] != null) notteVals.push(tempHourly[i]);
+      if(giornoOre.includes(ora) && tempHourly[i] != null) giornoVals.push(tempHourly[i]);
+    }
+    if(notteVals.length) tNotte = Math.round(notteVals.reduce((a,b)=>a+b,0)/notteVals.length*10)/10;
+    if(giornoVals.length) tGiorno = Math.round(giornoVals.reduce((a,b)=>a+b,0)/giornoVals.length*10)/10;
+  }
+  // Temperatura pesata: 60% notte + 40% giorno (se disponibili)
+  const tPesata = (tNotte!=null && tGiorno!=null)
+    ? Math.round((tNotte*0.6 + tGiorno*0.4)*10)/10
+    : null;
+
   return {
     temp: Math.round(d.current.temperature_2m*10)/10,
     um: d.current.relative_humidity_2m,
@@ -1528,6 +1593,9 @@ async function getMeteo(lat,lon) {
     escursione,
     tMax: tMax0!=null ? Math.round(tMax0*10)/10 : null,
     tMin: tMin0!=null ? Math.round(tMin0*10)/10 : null,
+    tNotte,
+    tGiorno,
+    tPesata,
   };
 }
 
@@ -1900,6 +1968,15 @@ function renderExtra(extra) {
   const el = document.getElementById("extra-display");
   if(!el || !extra) return;
   const items = [];
+  // Temperature notturna e diurna (più importanti della corrente)
+  if(state.piogge?.tNotte!=null) {
+    const ok = state.piogge.tNotte>=6&&state.piogge.tNotte<=14;
+    items.push({l:"T° notte (22-6)", v:state.piogge.tNotte+"°C", ok});
+  }
+  if(state.piogge?.tGiorno!=null) {
+    const ok = state.piogge.tGiorno>=10&&state.piogge.tGiorno<=22;
+    items.push({l:"T° giorno (6-22)", v:state.piogge.tGiorno+"°C", ok});
+  }
   if(extra.tSuolo!=null) {
     const ok = extra.tSuolo>=8&&extra.tSuolo<=18;
     items.push({l:"T° suolo", v:extra.tSuolo+"°C", ok});
@@ -2274,7 +2351,7 @@ async function analyzeCoords() {
   const meteoVal = (meteoRes.status==="fulfilled" && meteoRes.value) ? meteoRes.value : null;
   if(meteoVal) {
     temp=meteoVal.temp||15; um=meteoVal.um||65; soilMoist=meteoVal.soilMoist||null;
-    state.piogge={pioggia14:meteoVal.pioggia14||0,pioggia10:meteoVal.pioggia10||0,pioggia3:meteoVal.pioggia3||0,giorniSeccita:meteoVal.giorniSeccita||0,pressione:{valore:meteoVal.pressione,tendenza:meteoVal.tendenzaPressione}};
+    state.piogge={pioggia14:meteoVal.pioggia14||0,pioggia10:meteoVal.pioggia10||0,pioggia3:meteoVal.pioggia3||0,giorniSeccita:meteoVal.giorniSeccita||0,pressione:{valore:meteoVal.pressione,tendenza:meteoVal.tendenzaPressione},tNotte:meteoVal.tNotte,tGiorno:meteoVal.tGiorno,tPesata:meteoVal.tPesata};
     state.pressione={valore:meteoVal.pressione,tendenza:meteoVal.tendenzaPressione};
     state.extra={tSuolo:meteoVal.tSuolo,vento:meteoVal.vento,nuvolosita:meteoVal.nuvolosita,escursione:meteoVal.escursione,tMax:meteoVal.tMax,tMin:meteoVal.tMin};
     state.giorni7=meteoVal.giorni7||[];
