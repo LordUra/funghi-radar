@@ -247,28 +247,11 @@ body {
 .backup-bar span { font-size:12px;color:var(--green-mid);flex:1; }
 .fav-nome-input { font-size:14px;font-weight:500;color:var(--text);background:transparent;border:none;border-bottom:1.5px solid var(--green-light);outline:none;font-family:'DM Sans',sans-serif;width:100%;padding:0 0 2px; }
 .notif-bar { padding: .875rem 1rem; background: var(--green-ghost); border-radius: var(--radius); font-size: 12px; color: var(--green-mid); display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 1rem; border: 1px solid var(--green-pale); }
-.analisi-testo { font-size: 13px; color: var(--text-mid); line-height: 1.75; margin-top: 8px; }
+
 .section-divider { height: 1px; background: var(--border); margin: 1.25rem 0; }
 .fav-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
 
-/* API KEY BAR */
-.apikey-bar {
-  background: #0e2a0e; border-bottom: 1px solid rgba(255,255,255,.08);
-  padding: .625rem 1.25rem; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-}
-.apikey-label { font-size: 11px; color: var(--green-pale); white-space: nowrap; }
-.apikey-input {
-  flex: 1; min-width: 180px; padding: 6px 10px; font-size: 12px;
-  border: 1px solid rgba(255,255,255,.15); border-radius: 8px;
-  background: rgba(255,255,255,.07); color: var(--cream);
-  font-family: 'DM Sans', monospace; letter-spacing: .03em;
-}
-.apikey-input::placeholder { color: rgba(255,255,255,.3); }
-.apikey-input:focus { outline: none; border-color: var(--green-pale); }
-.apikey-save { padding: 6px 12px; font-size: 12px; border-radius: 8px; border: 1px solid var(--green-pale); background: transparent; color: var(--green-pale); cursor: pointer; font-family: 'DM Sans', sans-serif; white-space: nowrap; }
-.apikey-save:hover { background: rgba(168,200,168,.15); }
-.apikey-ok { font-size: 11px; color: #7ec87e; display: none; }
-.apikey-warn { font-size: 11px; color: #f5c542; }
+
 
 /* FOOTER */
 .footer { text-align: center; padding: 2rem 1rem 3rem; font-size: 11px; color: var(--text-muted); }
@@ -288,24 +271,14 @@ body {
 </head>
 <body>
 
-<div class="apikey-bar" id="apikey-bar">
-  <span class="apikey-label">API Key Anthropic</span>
-  <input class="apikey-input" type="password" id="apikey-input" placeholder="sk-ant-api03-..." autocomplete="off" spellcheck="false">
-  <button class="apikey-save" onclick="saveApiKey()">Salva</button>
-  <span class="apikey-ok" id="apikey-ok">✓ Salvata</span>
-  <span class="apikey-warn" id="apikey-warn"></span>
-</div>
-
 <div class="header">
   <div class="header-top">
     <div class="logo"><span class="logo-icon">🍄</span> Funghi Radar<span class="header-sub" style="margin-left:8px">beta</span></div>
   </div>
   <div class="tabs" id="tabs-bar">
     <button class="tab active" data-tab="radar">Radar</button>
-    <button class="tab" data-tab="segnalazioni">Segnalazioni<span id="segn-badge"></span></button>
     <button class="tab" data-tab="terreno">Terreno</button>
     <button class="tab" data-tab="preferiti">Preferiti<span id="fav-badge"></span></button>
-    <button class="tab" data-tab="crediti">Crediti</button>
   </div>
 </div>
 
@@ -517,38 +490,6 @@ body {
 
 </div>
 
-  <!-- ===== CREDITI ===== -->
-  </div>
-
-  <div class="panel" id="panel-crediti" style="padding-top:1.25rem">
-    <div class="card">
-      <div class="card-title">Utilizzo API Anthropic</div>
-      <div class="crediti-row">
-        <div class="crediti-stat"><div class="crediti-val" id="cr-chiamate">0</div><div class="crediti-lbl">Chiamate totali</div></div>
-        <div class="crediti-stat"><div class="crediti-val" id="cr-oggi">0</div><div class="crediti-lbl">Oggi</div></div>
-        <div class="crediti-stat"><div class="crediti-val" id="cr-costo">$0.000</div><div class="crediti-lbl">Costo stimato</div></div>
-        <div class="crediti-stat"><div class="crediti-val" id="cr-token">0</div><div class="crediti-lbl">Token usati</div></div>
-      </div>
-      <div class="crediti-warn" id="cr-warn">⚠ Hai superato la soglia di spesa impostata</div>
-      <div style="margin-top:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-        <span style="font-size:12px;color:var(--text-muted)">Stima basata su Claude Sonnet (~$0.003/chiamata media)</span>
-        <button class="crediti-reset" onclick="resetCrediti()">Azzera contatore</button>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-title">Soglia di avviso</div>
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <div class="field" style="flex:1;min-width:120px"><label>Avvisami se supero ($)</label><input type="number" id="soglia-input" placeholder="es. 1.00" step="0.10" min="0"></div>
-        <button class="btn btn-primary" style="margin-top:18px" onclick="salvaSoglia()">Salva soglia</button>
-        <span id="soglia-ok" style="font-size:12px;color:var(--green-mid);display:none;margin-top:18px">✓ Salvata</span>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-title">Dettaglio sessioni</div>
-      <div id="cr-log" style="font-size:12px;color:var(--text-mid);line-height:1.8;max-height:220px;overflow-y:auto"></div>
-    </div>
-  </div>
-  </div>
 
 </div>
 
@@ -556,48 +497,7 @@ body {
 
 <script>
 
-// ─── COSTANTI ────────────────────────────────────────────────────────────────
-const CLAUDE_MODEL = "claude-sonnet-4-20250514";
 
-// ─── API KEY ─────────────────────────────────────────────────────────────────
-let apiKey = "";
-try { apiKey = localStorage.getItem("funghiRadar_apikey") || ""; } catch(e) {}
-
-function initApiKeyUI() {
-  const inp = document.getElementById("apikey-input");
-  const warn = document.getElementById("apikey-warn");
-  if(apiKey) {
-    inp.value = apiKey;
-    document.getElementById("apikey-ok").style.display = "inline";
-    warn.textContent = "";
-  } else {
-    warn.textContent = "⚠ Inserisci la tua API key per usare l'app";
-  }
-}
-
-function saveApiKey() {
-  const val = document.getElementById("apikey-input").value.trim();
-  const warn = document.getElementById("apikey-warn");
-  const ok = document.getElementById("apikey-ok");
-  if(!val.startsWith("sk-ant-")) {
-    warn.textContent = "⚠ Formato non valido (deve iniziare con sk-ant-)";
-    ok.style.display = "none";
-    return;
-  }
-  apiKey = val;
-  try { localStorage.setItem("funghiRadar_apikey", val); } catch(e) {}
-  ok.style.display = "inline";
-  warn.textContent = "";
-  setTimeout(()=>ok.style.display="none", 2500);
-}
-
-function getApiKey() {
-  if(!apiKey) {
-    alert("Inserisci prima la tua API key Anthropic nella barra in cima.\nPuoi ottenerla su console.anthropic.com");
-    return null;
-  }
-  return apiKey;
-}
 
 const VEG_OPTIONS = [
   {id:"faggi",lbl:"Faggi",icon:"🌳"},{id:"querce",lbl:"Querce",icon:"🌲"},
@@ -658,7 +558,7 @@ const SPECIE_DB = [
    },
    areeEscluse:["litorale","pianura"],
    tags:["Estate-Autunno","pH acido","Faggete e quercete"],
-   desc:"Il più ricercato. Predilige abete rosso, faggio e castagno. Non cresce mai sotto il larice. Due biotipi: estatino (reticulatus) a quote basse e autunnale (edulis) nelle faggete. Il Boletus aereus è tipico delle leccete mediterranee."},
+   desc:"Il più ricercato. Due biotipi principali: estatino (reticulatus) e autunnale (edulis). Il Boletus aereus predilige leccete e quercete mediterranee."},
 
   // ─── GALLINACCIO ─────────────────────────────────────────────────────────
   {nome:"Gallinaccio",sci:"Cantharellus cibarius",icon:"🌼",
@@ -679,7 +579,7 @@ const SPECIE_DB = [
      pianura:     [5,6,7,8,9,10],
    },
    tags:["Estate-autunno","Boschi misti"],
-   desc:"Dal livello del mare fino a 2000m, maggio-novembre. Simbionte legato all'acidità del suolo. Odore fruttato di albicocca con nota di vaniglia. Specie continentale prevalentemente, diffusa anche nelle latifoglie del Sud. Nessun viraggio al taglio."},
+   desc:"Lunga stagione. In Sardegna e Sud Italia la stagione si sposta all'autunno-inverno per il clima mediterraneo."},
 
   // ─── OVULO BUONO ─────────────────────────────────────────────────────────
   {nome:"Ovulo",sci:"Amanita caesarea",icon:"🥚",
@@ -700,7 +600,7 @@ const SPECIE_DB = [
      pianura:     [5,6,7,8,9],
    },
    tags:["Caldo","Querce","Leccete","Specie termofila"],
-   desc:"Specie termofila per eccellenza — zone calde e secche, fino a 900m. Castagni e cerri principalmente. Unico fungo commestibile crudo. Facilmente riconoscibile nell'involucro bianco a uovo. Lamelle e gambo gialli. In Sardegna e Sud anche in primavera precoce."},
+   desc:"Predilige leccete e quercete termofile. In Sardegna e Sud Italia frutifica anche in primavera precoce."},
 
   // ─── BOLETO NERO / BRONZINO ──────────────────────────────────────────────
   {nome:"Porcino nero",sci:"Boletus aereus",icon:"🍄",
@@ -720,7 +620,7 @@ const SPECIE_DB = [
      pianura:     [6,7,8,9,10],
    },
    tags:["Leccete","Quercete","Mediterraneo","Estate-Autunno"],
-   desc:"Il bronzino — cappello bruno-nero scuro. Specie termofila delle leccete e quercete mediterranee. Cresce nelle stesse condizioni dell'ovulo: caldo e secco. Molto comune in Sardegna, Sicilia e versanti meridionali dell'Appennino."},
+   desc:"Specie termofila delle leccete e quercete. Molto comune in Sardegna, Sicilia e versanti meridionali dell'Appennino."},
 
   // ─── CHIODINO ────────────────────────────────────────────────────────────
   {nome:"Chiodino",sci:"Armillaria mellea",icon:"🍂",
@@ -741,7 +641,7 @@ const SPECIE_DB = [
      pianura:     [9,10,11,0],
    },
    tags:["Ceppi","Autunno-inverno","Ubiquitario"],
-   desc:"Parassita lignicolo che fruttifica a ciuffi densissimi su ceppi, radici e tronchi. TOSSICO DA CRUDO — causa gravi intossicazioni gastrointestinali. Va consumato sempre ben cotto e dopo sbollentatura. Stagione autunno-inverno, prolungata al sud."},
+   desc:"Parassita di ceppi. Stagione autunno-inverno, prolungata al sud. Diffuso in tutta Italia."},
 
   // ─── RUSSOLA ─────────────────────────────────────────────────────────────
   {nome:"Russola",sci:"Russula spp.",icon:"🔴",
@@ -762,7 +662,7 @@ const SPECIE_DB = [
      pianura:     [5,6,7,8,9,10],
    },
    tags:["Boschi vari","Ubiquitaria"],
-   desc:"Genere con oltre 150 specie in Italia. Le commestibili migliori: R. virescens (cappello verde), R. cyanoxantha (gambo viola-blu). Velenose: R. emetica (rossastra, caustica al sapore), R. subnigricans (mortale). Identificazione certa INDISPENSABILE."},
+   desc:"Genere diffusissimo in tutta Italia. Attenzione: specie commestibili e velenose coesistono."},
 
   // ─── PRATAIOLO ───────────────────────────────────────────────────────────
   {nome:"Prataiolo",sci:"Agaricus campestris",icon:"⚪",
@@ -782,7 +682,7 @@ const SPECIE_DB = [
      pianura:     [3,4,5,9,10,11],
    },
    tags:["Prati","Pascoli","Neutro-basico"],
-   desc:"Prati e pascoli neutro-basici. Attenzione alla confusione con Agaricus xanthodermus (ingiallisce al taglio, odore di fenolo) e con Amanita phalloides bianca nei giovani esemplari. In Sardegna e Sicilia quasi tutto l'anno."},
+   desc:"Prati e pascoli. In Sardegna e Sicilia disponibile quasi tutto l'anno tranne l'estate secca."},
 
   // ─── SPUGNOLA ────────────────────────────────────────────────────────────
   {nome:"Spugnola",sci:"Morchella spp.",icon:"🫧",
@@ -803,7 +703,7 @@ const SPECIE_DB = [
      pianura:     [2,3,4],
    },
    tags:["Primavera","Calcareo","150-1100m"],
-   desc:"Fungo primaverile per eccellenza. Suoli calcarei umidi, vicino a corsi d'acqua, vecchi frutteti e terreni disturbati. In Sardegna e Sud inizia a gennaio. TOSSICA DA CRUDA — va sempre bollita o cotta a lungo, mai saltata velocemente."},
+   desc:"Fungo primaverile. In Sardegna e Sud inizia già a gennaio. Suoli calcarei umidi vicino a corsi d'acqua."},
 
   // ─── MAZZA DI TAMBURO ────────────────────────────────────────────────────
   {nome:"Mazza di tamburo",sci:"Macrolepiota procera",icon:"🌂",
@@ -824,7 +724,7 @@ const SPECIE_DB = [
      pianura:     [5,6,7,8,9,10,11],
    },
    tags:["Radure","Ubiquitaria","Lunga stagione"],
-   desc:"Grande e inconfondibile: anello mobile a doppio strato sul gambo, cappello fino a 40cm. Ottima impanata e fritta. Non raccogliere mai le Lepiota piccole — alcune sono mortalmente tossiche. Solo M. procera con cappello >15cm e anello mobile è sicura."},
+   desc:"Diffusa in tutta Italia. Stagione molto lunga al sud e in pianura."},
 
   // ─── LATTARIO DELIZIOSO ──────────────────────────────────────────────────
   {nome:"Lattario delizioso",sci:"Lactarius deliciosus",icon:"🟠",
@@ -845,8 +745,8 @@ const SPECIE_DB = [
      pianura:     [6,7,8,9,10],
    },
    areeEscluse:["litorale","pianura"],
-   tags:["Pinete","Conifere","Lattice arancio","Sanguinaccio"],
-   desc:"Strettamente micorrizico con pini e abeti. Lattice arancio-carota caratteristico (non virante). Distinto dal Sanguinello (L. sanguifluus) che ha lattice rosso-vinoso. In Sardegna nelle pinete costiere da settembre."},
+   tags:["Pinete","Conifere","Acido"],
+   desc:"Strettamente legato a pini e abeti. In Sardegna presente nelle pinete costiere da settembre."},
 
   // ─── SANGUINELLO ─────────────────────────────────────────────────────────
   // Lactarius sanguifluus — tipico delle pinete costiere mediterranee
@@ -869,7 +769,7 @@ const SPECIE_DB = [
      alpi:        [8,9,10],
    },
    tags:["Pinete costiere","Autunno-inverno","Litorale","Lattice rosso-vinoso"],
-   desc:"Strettamente legato ai pini marittimi e domestici delle pinete costiere. Lattice rosso-vinoso — carattere inconfondibile rispetto al lattice arancio del Lattario deliciosus. Cappello zonato arancio-rosso. Ottimo alla griglia e sott'olio."},
+   desc:"Strettamente legato ai pini marittimi e domestici. Tipico delle pinete costiere del Lazio, Toscana, Liguria, Sardegna e Sicilia. Il lattice è rosso-vinoso, caratteristica distintiva dal Lattario delizioso."},
 
   // ─── TROMBETTA DEI MORTI ─────────────────────────────────────────────────
   {nome:"Trombetta dei morti",sci:"Craterellus cornucopioides",icon:"🖤",
@@ -891,7 +791,7 @@ const SPECIE_DB = [
    },
    areeEscluse:["litorale"],
    tags:["Humus ricco","Autunno","Appennino centro-settentrionale"],
-   desc:"Difficile da vedere per il colore nero. Cresce in tappeti fitti nelle lettiere di faggio e quercia. Ottima essiccata e in polvere. Comune Appennino centro-settentrionale e Alpi, autunno."},
+   desc:"Comune nell'Appennino centro-settentrionale e Alpi. In Sardegna e Sud presente in autunno-inverno."},
 
   // ─── CARDONCELLO ─────────────────────────────────────────────────────────
   // Specie tipica del Sud Italia e Puglia
@@ -914,7 +814,7 @@ const SPECIE_DB = [
    // Presente principalmente al Sud e isole
    areePresenza:["sud","sicilia","sardegna","appennino_cs"],
    tags:["Sud Italia","Prati aridi","Autunno-primavera","Tipico pugliese"],
-   desc:"La specie fungina più coltivata in Italia. Nel Mezzogiorno cresce selvatico nei prati aridi argillosi vicino a ferula, cardi e finocchio selvatico. Puglia e Basilicata i principali areali. Sapore intenso e aromatico, ottimo alla griglia."},
+   desc:"Specie tipica del Sud Italia, Puglia, Basilicata, Sicilia e Sardegna. Cresce nei prati aridi vicino a ferula e cardi. Raro al Centro-Nord."},
 
   // ─── PIOPPARELLO ─────────────────────────────────────────────────────────
   {nome:"Piopparello",sci:"Cyclocybe aegerita",icon:"🌿",
@@ -934,117 +834,7 @@ const SPECIE_DB = [
      pianura:     [3,4,5,9,10,11],
    },
    tags:["Pioppi","Primavera-Autunno","Ceppi"],
-   desc:"Cresce a ciuffi su ceppi vivi e morenti di pioppo, salice, gelso e platano. Molto coltivato artificialmente su ceppi inoculati. Sapore delicato. Comune lungo fiumi, canali e filari. Raccoglierlo giovane, prima che il cappello si apra troppo."},
-
-  // ─── GALLETTO ────────────────────────────────────────────────────────────
-  {nome:"Galletto",sci:"Cantharellus lutescens",icon:"🌻",
-   cond:{tempMin:8,tempMax:20,umMin:65,umMax:92,phMin:4.0,phMax:6.0,quotaMin:200,quotaMax:1600,org:3},
-   veg:["faggi","abeti","misto"],tipo:["franco","limoso","torboso"],
-   tipoEscluso:["sabbioso","calcareo"],vegEsclusa:["macchia","prati"],
-   stagioni:{default:[8,9,10,11],bassa:[8,9,10,11],alta:[7,8,9,10],alpi:[7,8,9,10],sardegna:[10,11,0,1],sicilia:[10,11,0],sud:[9,10,11],appennino_cs:[8,9,10,11],appennino_c:[8,9,10,11],appennino_n:[8,9,10],litorale:[9,10,11],pianura:[9,10,11]},
-   tags:["Faggete","Abetaie","Autunno","Profumo fruttato"],
-   desc:"Simile al gallinaccio ma più piccolo, con gambo cavo giallastro. Cresce in tappeti fitti nelle faggete umide in autunno. Profumo fruttato intenso. Ottimo essiccato."},
-
-  // ─── AMANITA VAGINATA ────────────────────────────────────────────────────
-  {nome:"Amanita vaginata",sci:"Amanita vaginata",icon:"🩶",
-   cond:{tempMin:10,tempMax:24,umMin:60,umMax:90,phMin:4.5,phMax:7.0,quotaMin:100,quotaMax:1500,org:2},
-   veg:["faggi","querce","misto","castagni","abeti"],tipo:["franco","sabbioso","limoso"],
-   tipoEscluso:[],vegEsclusa:[],
-   stagioni:{default:[5,6,7,8,9,10],bassa:[5,6,7,8,9,10],alta:[6,7,8,9,10],alpi:[6,7,8,9,10],sardegna:[3,4,5,9,10,11],sicilia:[3,4,5,9,10,11],sud:[4,5,6,9,10,11],appennino_cs:[5,6,7,8,9,10],appennino_c:[5,6,7,8,9,10],appennino_n:[5,6,7,8,9,10],litorale:[5,6,7,8,9,10],pianura:[5,6,7,8,9,10]},
-   tags:["Ubiquitaria","Solo cotta","Volva a sacco"],
-   desc:"Diffusa in tutti i boschi. SOLO cotta — cruda è tossica. Assenza di anello sul gambo — carattere importante. Volva a sacco alla base. Attenzione massima: A. phalloides giovane ancora nell'uovo è quasi identica."},
-
-  // ─── AMANITA RUBESCENS ───────────────────────────────────────────────────
-  {nome:"Amanita rubescens",sci:"Amanita rubescens",icon:"🩷",
-   cond:{tempMin:10,tempMax:24,umMin:60,umMax:88,phMin:4.5,phMax:6.5,quotaMin:100,quotaMax:1600,org:2.5},
-   veg:["faggi","abeti","querce","castagni","misto"],tipo:["franco","sabbioso","limoso"],
-   tipoEscluso:[],vegEsclusa:[],
-   stagioni:{default:[5,6,7,8,9,10],bassa:[5,6,7,8,9,10],alta:[6,7,8,9,10],alpi:[6,7,8,9,10],sardegna:[3,4,5,9,10,11],sicilia:[3,4,5,9,10,11],sud:[4,5,6,9,10,11],appennino_cs:[5,6,7,8,9,10],appennino_c:[5,6,7,8,9,10],appennino_n:[5,6,7,8,9,10],litorale:[5,6,7,8,9,10],pianura:[5,6,7,8,9,10]},
-   tags:["Ubiquitaria","Solo cotta","Carne arrossa"],
-   desc:"La carne arrossa al taglio e alla pressione — carattere distintivo. Molto comune in tutti i boschi. SOLO cotta — cruda contiene emolisine termolabili. Non confondere con A. pantherina (non arrossa)."},
-
-  // ─── VESCIA ──────────────────────────────────────────────────────────────
-  {nome:"Vescia",sci:"Calvatia/Lycoperdon spp.",icon:"⚽",
-   cond:{tempMin:8,tempMax:24,umMin:55,umMax:85,phMin:5.0,phMax:7.5,quotaMin:0,quotaMax:1500,org:2},
-   veg:["prati","misto","querce","faggi"],tipo:["franco","sabbioso","calcareo"],
-   tipoEscluso:[],vegEsclusa:[],
-   stagioni:{default:[6,7,8,9,10],bassa:[5,6,7,8,9,10,11],alta:[6,7,8,9,10],alpi:[6,7,8,9,10],sardegna:[9,10,11,0,1,2,3,4],sicilia:[9,10,11,0,1,2,3],sud:[5,6,7,8,9,10,11],appennino_cs:[6,7,8,9,10],appennino_c:[6,7,8,9,10],appennino_n:[6,7,8,9,10],litorale:[6,7,8,9,10,11],pianura:[5,6,7,8,9,10,11]},
-   tags:["Prati e boschi","Solo da giovane","Carne bianca"],
-   desc:"Commestibile SOLO quando la carne interna è completamente bianca e compatta. Diffusissima in prati e boschi di tutta Italia. In Sardegna e Sicilia disponibile quasi tutto l'anno."},
-
-  // ─── FINFERLO INVERNALE ──────────────────────────────────────────────────
-  {nome:"Finferlo invernale",sci:"Craterellus tubaeformis",icon:"🍂",
-   cond:{tempMin:2,tempMax:14,umMin:70,umMax:96,phMin:4.0,phMax:6.0,quotaMin:200,quotaMax:1400,org:3.5},
-   veg:["faggi","abeti","misto"],tipo:["limoso","franco","torboso"],
-   tipoEscluso:["sabbioso","calcareo"],vegEsclusa:["macchia","prati"],areeEscluse:["sicilia","sardegna"],
-   stagioni:{default:[10,11,0,1],bassa:[10,11,0,1,2],alta:[9,10,11],alpi:[9,10,11,0],sud:[10,11,0],appennino_cs:[10,11,0,1],appennino_c:[10,11,0,1],appennino_n:[9,10,11,0],litorale:[10,11,0],pianura:[10,11,0]},
-   tags:["Autunno-inverno","Faggete umide","Resiste al gelo"],
-   desc:"Specie invernale delle faggete umide. Gambo cavo giallastro, cappello a imbuto grigio-brunastro. Resiste al gelo. Cresce a ciuffi fitti nella lettiera. Ottimo essiccato e in polvere."},
-
-  // ─── BOLETO ESTATINO ─────────────────────────────────────────────────────
-  {nome:"Boleto estatino",sci:"Boletus reticulatus",icon:"☀️",
-   cond:{tempMin:14,tempMax:26,umMin:60,umMax:88,phMin:5.0,phMax:7.0,quotaMin:100,quotaMax:1200,org:2.5},
-   veg:["querce","castagni","faggi","misto","lecci"],tipo:["franco","sabbioso","calcareo"],
-   tipoEscluso:[],vegEsclusa:["abeti","prati","macchia"],
-   stagioni:{default:[5,6,7],bassa:[4,5,6,7],alta:[5,6,7,8],alpi:[6,7,8],sardegna:[4,5,6],sicilia:[4,5,6],sud:[4,5,6,7],appennino_cs:[5,6,7],appennino_c:[5,6,7],appennino_n:[5,6,7],litorale:[4,5,6,7],pianura:[4,5,6,7]},
-   tags:["Estate","Quercete","Cappello chiaro screpolato"],
-   desc:"Il porcino estivo (sinonimo B. aestivalis). Cappello ocra-brunastro, cuticola asciutta e spesso screpolata a mosaico — carattere distintivo. Quercete e castagneti a quote basse. Maggio-luglio. Più precoce del porcino autunnale, tollerante al caldo."},
-
-  // ─── BOLETO DEI PINI ─────────────────────────────────────────────────────
-  {nome:"Boleto dei pini",sci:"Boletus pinophilus",icon:"🌲",
-   cond:{tempMin:6,tempMax:18,umMin:60,umMax:92,phMin:4.0,phMax:6.0,quotaMin:200,quotaMax:1900,org:3.5},
-   veg:["abeti","faggi","castagni","misto"],tipo:["sabbioso","franco","limoso"],
-   tipoEscluso:["calcareo"],vegEsclusa:["querce","macchia","prati","lecci"],
-   stagioni:{default:[4,5,6,7,8,9,10,11],bassa:[4,5,6,9,10,11],alta:[5,6,7,8,9,10],alpi:[5,6,7,8,9,10,11],sardegna:[9,10,11],sicilia:[9,10,11],sud:[4,5,9,10,11],appennino_cs:[4,5,7,8,9,10,11],appennino_c:[4,5,7,8,9,10,11],appennino_n:[4,5,7,8,9,10,11],litorale:[9,10,11],pianura:[9,10,11]},
-   tags:["Pinete e abetaie","Duplice stagione","Cappello rosso-brunastro","Il più grande dei porcini"],
-   desc:"Il porcino rosso — il più grande della sezione Edules, esemplari fino a 2kg. Duplice produzione: primavera (maggio, il primo porcino dell'anno) e tardo autunno (l'ultimo). Cresce anche sotto faggi, castagni e betulle oltre che conifere. Tinge di verde l'acqua di cottura."},
-
-  // ─── PINAROLO ────────────────────────────────────────────────────────────
-  {nome:"Pinarolo",sci:"Suillus granulatus",icon:"🫙",
-   cond:{tempMin:10,tempMax:22,umMin:60,umMax:88,phMin:4.5,phMax:6.0,quotaMin:0,quotaMax:1500,org:2},
-   veg:["abeti"],tipo:["sabbioso","franco"],
-   tipoEscluso:["calcareo","argilloso"],vegEsclusa:["faggi","querce","castagni","macchia","prati","lecci"],
-   stagioni:{default:[5,6,7,8,9,10],bassa:[5,6,7,8,9,10],alta:[6,7,8,9,10],alpi:[6,7,8,9,10],sardegna:[9,10,11,0,1],sicilia:[9,10,11,0,1],sud:[9,10,11,5,6],appennino_cs:[5,6,7,8,9,10],appennino_c:[5,6,7,8,9,10],appennino_n:[5,6,7,8,9,10],litorale:[5,6,7,8,9,10],pianura:[5,6,7,8,9,10]},
-   tags:["Pinete","Lunga stagione","Granuli bianchi sul gambo"],
-   desc:"Strettamente legato ai pini. Caratteristici granuli bianchi sul gambo giovane. Sbucciare il cappello prima della cottura. Molto comune nelle pinete costiere e montane."},
-
-  // ─── CORTINARIO ──────────────────────────────────────────────────────────
-  {nome:"Cortinario",sci:"Cortinarius praestans",icon:"🟣",
-   cond:{tempMin:8,tempMax:18,umMin:65,umMax:90,phMin:6.0,phMax:8.0,quotaMin:200,quotaMax:1600,org:3},
-   veg:["faggi","querce","castagni","misto"],tipo:["calcareo","franco","limoso"],
-   tipoEscluso:["sabbioso"],vegEsclusa:["macchia","prati","abeti","lecci"],
-   areeEscluse:["litorale"],
-   stagioni:{default:[7,8,9,10],bassa:[7,8,9,10],alta:[7,8,9],alpi:[7,8,9,10],sardegna:[9,10,11],sicilia:[9,10,11],sud:[8,9,10],appennino_cs:[8,9,10],appennino_c:[7,8,9,10],appennino_n:[7,8,9,10],pianura:[8,9,10]},
-   tags:["Faggete calcaree","Il gigante dei Cortinari","Estate-Autunno"],
-   desc:"Il gigante del genere (cappello fino a 25cm). Faggete e quercete su suoli calcarei, tarda estate-autunno. Da molti preferito al porcino. Cappello corrugato radialmente, assenza di bulbo marginato. ATTENZIONE: identificazione certa obbligatoria — molti Cortinarius sono mortalmente tossici."},
-
-  // ─── MARZOLINO ───────────────────────────────────────────────────────────
-  {nome:"Marzolino",sci:"Morchella esculenta",icon:"🧽",
-   cond:{tempMin:6,tempMax:16,umMin:55,umMax:85,phMin:6.0,phMax:8.0,quotaMin:0,quotaMax:1200,org:2},
-   veg:["pioppi","noccioli","misto","querce","prati"],tipo:["franco","calcareo","limoso","sabbioso"],
-   tipoEscluso:[],vegEsclusa:["abeti"],
-   stagioni:{default:[2,3,4],bassa:[1,2,3,4],alta:[3,4,5],alpi:[4,5,6],sardegna:[1,2,3],sicilia:[1,2,3],sud:[1,2,3,4],appennino_cs:[2,3,4],appennino_c:[2,3,4],appennino_n:[3,4,5],pianura:[2,3,4],litorale:[2,3,4]},
-   tags:["Primavera","Ascomicete","Boschi e frutteti","Solo cotto"],
-   desc:"Simile alla spugnola, cappello più tondeggiante. Cresce in primavera in boschi di latifoglie, vecchi frutteti e terreni disturbati. Va SEMPRE consumato cotto. Ottimo essiccato."},
-
-  // ─── PRUGNOLO ────────────────────────────────────────────────────────────
-  {nome:"Prugnolo",sci:"Calocybe gambosa",icon:"🌸",
-   cond:{tempMin:8,tempMax:20,umMin:50,umMax:80,phMin:6.0,phMax:8.0,quotaMin:0,quotaMax:1200,org:1.5},
-   veg:["prati","macchia","querce","misto"],tipo:["calcareo","franco","sabbioso"],
-   tipoEscluso:[],vegEsclusa:["abeti","faggi"],
-   stagioni:{default:[3,4,5],bassa:[2,3,4,5],alta:[4,5,6],alpi:[4,5,6],sardegna:[1,2,3,4],sicilia:[1,2,3,4],sud:[2,3,4,5],appennino_cs:[3,4,5],appennino_c:[3,4,5],appennino_n:[4,5,6],pianura:[3,4,5],litorale:[3,4,5]},
-   tags:["Primavera","Fungo di San Giorgio","Prati","Odore farinoso"],
-   desc:"Il fungo di San Giorgio (23 aprile). Cresce in cerchi nelle radure erbose vicino al prugnolo selvatico (Prunus spinosa) e siepi. Odore farinoso inconfondibile — come farina fresca. Bianco-crema, compatto. Ottimo trifolato. Diffuso da pianura a 1200m."},
-
-  // ─── MARZUOLO ────────────────────────────────────────────────────────────
-  {nome:"Marzuolo",sci:"Hygrophorus marzuolus",icon:"❄️",
-   cond:{tempMin:-2,tempMax:10,umMin:60,umMax:95,phMin:4.5,phMax:6.5,quotaMin:300,quotaMax:2000,org:3},
-   veg:["abeti","faggi","misto","querce","castagni"],tipo:["limoso","franco","torboso"],
-   tipoEscluso:["sabbioso","calcareo"],vegEsclusa:["macchia","prati","lecci"],
-   areeEscluse:["litorale","pianura","sicilia"],
-   stagioni:{default:[1,2,3,4],bassa:[1,2,3],alta:[2,3,4,5],alpi:[2,3,4,5],sardegna:[1,2,3],sud:[1,2,3],appennino_cs:[2,3,4],appennino_c:[2,3,4],appennino_n:[2,3,4,5]},
-   tags:["Invernale","Sotto la neve","Abetaie e faggete","Il dormiente"],
-   desc:"Noto come il 'dormiente'. Emerge allo scioglimento delle nevi in abetaie, faggete e boschi di cerro. Crescita semiipogea — difficile da scorgere interrato. Trovato anche a 500m in cerrete. Uno dei migliori commestibili invernali."},
+   desc:"Cresce su ceppi di pioppo e altri latifoglie. Comune in tutta Italia lungo fiumi e canali."},
 ];
 
 // ─── STATO
@@ -1058,79 +848,10 @@ let state = {
 };
 let favorites = [];
 let notifPerm = "default";
-let segnalazioni = [];
 
 try { favorites = JSON.parse(localStorage.getItem("funghiRadar_fav") || "[]"); } catch(e) {}
 function saveFavs() { try { localStorage.setItem("funghiRadar_fav", JSON.stringify(favorites)); } catch(e) {} }
 
-// ─── CREDITI ──────────────────────────────────────────────────────────────────
-let crediti = {chiamate:0, oggiData:"", oggiCount:0, tokenTot:0, costo:0, soglia:0, log:[]};
-try { crediti = JSON.parse(localStorage.getItem("funghiRadar_crediti") || JSON.stringify(crediti)); } catch(e) {}
-
-const COSTO_PER_CHIAMATA = 0.003; // stima media Sonnet input+output
-const TOKEN_MEDI = 800;
-
-function salvaCrediti() { try { localStorage.setItem("funghiRadar_crediti", JSON.stringify(crediti)); } catch(e) {} }
-
-function registraChiamata(tipo, tokensIn=0, tokensOut=0) {
-  const oggi = new Date().toISOString().slice(0,10);
-  if(crediti.oggiData !== oggi) { crediti.oggiData = oggi; crediti.oggiCount = 0; }
-  crediti.chiamate++;
-  crediti.oggiCount++;
-  const tok = (tokensIn||TOKEN_MEDI) + (tokensOut||300);
-  crediti.tokenTot += tok;
-  const costoChiamata = (tokensIn * 0.000003) + (tokensOut * 0.000015) || COSTO_PER_CHIAMATA;
-  crediti.costo += costoChiamata;
-  crediti.log.unshift({
-    ts: new Date().toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"}),
-    data: new Date().toLocaleDateString("it-IT",{day:"2-digit",month:"2-digit"}),
-    tipo,
-    costo: costoChiamata
-  });
-  if(crediti.log.length > 50) crediti.log = crediti.log.slice(0,50);
-  salvaCrediti();
-  renderCrediti();
-  if(crediti.soglia > 0 && crediti.costo >= crediti.soglia) {
-    document.getElementById("cr-warn").style.display = "block";
-  }
-}
-
-function renderCrediti() {
-  document.getElementById("cr-chiamate").textContent = crediti.chiamate;
-  document.getElementById("cr-oggi").textContent = crediti.oggiCount;
-  document.getElementById("cr-costo").textContent = "$" + crediti.costo.toFixed(3);
-  document.getElementById("cr-token").textContent = crediti.tokenTot > 999 ? (crediti.tokenTot/1000).toFixed(1)+"k" : crediti.tokenTot;
-  const logEl = document.getElementById("cr-log");
-  if(logEl) {
-    if(!crediti.log.length) { logEl.textContent = "Nessuna chiamata ancora."; return; }
-    logEl.innerHTML = crediti.log.map(l =>
-      `<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border)">
-        <span>${l.data} ${l.ts} — ${l.tipo}</span>
-        <span style="color:var(--text-muted)">~$${l.costo.toFixed(4)}</span>
-      </div>`).join("");
-  }
-  const inp = document.getElementById("soglia-input");
-  if(inp && !inp.value && crediti.soglia) inp.value = crediti.soglia;
-}
-
-function salvaSoglia() {
-  const v = parseFloat(document.getElementById("soglia-input").value);
-  if(!isNaN(v) && v >= 0) {
-    crediti.soglia = v;
-    salvaCrediti();
-    const ok = document.getElementById("soglia-ok");
-    ok.style.display = "inline";
-    setTimeout(()=>ok.style.display="none", 2000);
-  }
-}
-
-function resetCrediti() {
-  if(!confirm("Azzera il contatore delle chiamate?")) return;
-  crediti = {chiamate:0, oggiData:"", oggiCount:0, tokenTot:0, costo:0, soglia:crediti.soglia, log:[]};
-  salvaCrediti();
-  renderCrediti();
-  document.getElementById("cr-warn").style.display = "none";
-}
 
 // ─── UTILITÀ ─────────────────────────────────────────────────────────────────
 function dist(a,b,c,d) {
@@ -1629,6 +1350,278 @@ async function reverseGeocode(lat,lon) {
   } catch(e) { return "zona"; }
 }
 
+// ─── CAMPIONAMENTO MULTIPUNTO (500m) ─────────────────────────────────────────
+// Offset in gradi per ~500m: 1° lat ≈ 111km, 1° lon ≈ 111km*cos(lat)
+function offsetPoints(lat, lon, meters) {
+  const dLat = meters / 111000;
+  const dLon = meters / (111000 * Math.cos(lat * Math.PI / 180));
+  return [
+    {lat, lon, w:2},                          // centro — peso doppio
+    {lat:lat+dLat, lon, w:1},                 // Nord
+    {lat:lat-dLat, lon, w:1},                 // Sud
+    {lat, lon:lon+dLon, w:1},                 // Est
+    {lat, lon:lon-dLon, w:1},                 // Ovest
+  ];
+}
+
+function weightedAvg(values, weights) {
+  const totalW = weights.reduce((a,b)=>a+b, 0);
+  return values.reduce((sum, v, i) => sum + v * weights[i], 0) / totalW;
+}
+
+async function getMeteoMulti(lat, lon) {
+  const points = offsetPoints(lat, lon, 500);
+  const results = await Promise.allSettled(points.map(p => getMeteo(p.lat, p.lon)));
+  const valid = results.map((r,i) => r.status==="fulfilled" && r.value ? {...r.value, w:points[i].w} : null).filter(Boolean);
+  if(!valid.length) {
+    // Fallback: singolo punto centrale
+    try { return await getMeteo(lat, lon); } catch(e) { return null; }
+  }
+  const weights = valid.map(v=>v.w);
+  return {
+    temp:  Math.round(weightedAvg(valid.map(v=>v.temp),  weights)*10)/10,
+    um:    Math.round(weightedAvg(valid.map(v=>v.um),    weights)),
+    soilMoist: valid[0].soilMoist,
+    pioggia14: Math.round(weightedAvg(valid.map(v=>v.pioggia14||0), weights)*10)/10,
+    pioggia10: Math.round(weightedAvg(valid.map(v=>v.pioggia10||0), weights)*10)/10,
+    pioggia3:  Math.round(weightedAvg(valid.map(v=>v.pioggia3||0),  weights)*10)/10,
+    giorniSeccita: Math.round(weightedAvg(valid.map(v=>v.giorniSeccita||0), weights)),
+    giorni7: valid[0].giorni7 || [],
+    pressione: valid[0].pressione || null,
+    tendenzaPressione: valid[0].tendenzaPressione || null,
+    tSuolo: valid[0].tSuolo!=null ? Math.round(weightedAvg(valid.filter(v=>v.tSuolo!=null).map(v=>v.tSuolo), valid.filter(v=>v.tSuolo!=null).map(v=>v.w))*10)/10 : null,
+    vento: valid[0].vento!=null ? Math.round(weightedAvg(valid.filter(v=>v.vento!=null).map(v=>v.vento), valid.filter(v=>v.vento!=null).map(v=>v.w))) : null,
+    nuvolosita: valid[0].nuvolosita!=null ? Math.round(weightedAvg(valid.filter(v=>v.nuvolosita!=null).map(v=>v.nuvolosita), valid.filter(v=>v.nuvolosita!=null).map(v=>v.w))) : null,
+    escursione: valid[0].escursione,
+    tMax: valid[0].tMax,
+    tMin: valid[0].tMin,
+  };
+}
+
+async function getSoilMulti(lat, lon) {
+  const points = offsetPoints(lat, lon, 500);
+  const results = await Promise.allSettled(points.map(p =>
+    Promise.race([getSoil(p.lat, p.lon), new Promise(r=>setTimeout(()=>r(null),6000))])
+  ));
+  const valid = results.map((r,i) => r.status==="fulfilled" && r.value ? {...r.value, w:points[i].w} : null).filter(Boolean);
+  if(!valid.length) return null;
+  const weights = valid.map(v=>v.w);
+  // pH: media pesata
+  const phVals = valid.filter(v=>v.ph!=null);
+  const ph = phVals.length ? Math.round(weightedAvg(phVals.map(v=>v.ph), phVals.map(v=>v.w))*10)/10 : null;
+  // org: media pesata
+  const orgVals = valid.filter(v=>v.org!=null);
+  const org = orgVals.length ? Math.round(weightedAvg(orgVals.map(v=>v.org), orgVals.map(v=>v.w))*10)/10 : null;
+  // tipo: moda (il più frequente, pesato)
+  const tipoCount = {};
+  valid.forEach(v=>{ if(v.tipo) tipoCount[v.tipo] = (tipoCount[v.tipo]||0)+v.w; });
+  const tipo = Object.keys(tipoCount).length ? Object.keys(tipoCount).reduce((a,b)=>tipoCount[a]>tipoCount[b]?a:b) : null;
+  return { ph, org, tipo, source: "OpenLandMap ×5 (500m)" };
+}
+
+async function getElevationMulti(lat, lon) {
+  const points = offsetPoints(lat, lon, 500);
+  const results = await Promise.allSettled(points.map(p =>
+    Promise.race([getElevation(p.lat, p.lon), new Promise(r=>setTimeout(()=>r(null),5000))])
+  ));
+  const valid = results.map((r,i) => r.status==="fulfilled" && r.value!=null ? {v:r.value, w:points[i].w} : null).filter(Boolean);
+  if(!valid.length) return null;
+  return Math.round(weightedAvg(valid.map(v=>v.v), valid.map(v=>v.w)));
+}
+
+async function getElevation(lat,lon) {
+  // Cascata di fonti, dalla più precisa alla meno precisa per l'Italia
+  const sources = [
+    // 1. EU-DEM 25m — dataset Copernicus specifico per Europa, il più preciso
+    `https://api.opentopodata.org/v1/eudem25m?locations=${lat},${lon}`,
+    // 2. SRTM 30m — buona copertura globale
+    `https://api.opentopodata.org/v1/srtm30m?locations=${lat},${lon}`,
+    // 3. Open-Elevation (SRTM)
+    `https://api.open-elevation.com/api/v1/lookup?locations=${lat},${lon}`,
+    // 4. Open-Meteo DEM (griglia 1km, meno preciso ma sempre disponibile)
+    `https://api.open-meteo.com/v1/elevation?latitude=${lat}&longitude=${lon}`,
+  ];
+
+  for(const url of sources) {
+    try {
+      const r = await fetch(url, {signal: AbortSignal.timeout(5000)});
+      if(!r.ok) continue;
+      const d = await r.json();
+      let elev = null;
+      // opentopodata e open-elevation: d.results[0].elevation
+      if(d?.results?.[0]?.elevation != null) elev = d.results[0].elevation;
+      // open-meteo: d.elevation (array o numero)
+      else if(d?.elevation != null) elev = Array.isArray(d.elevation) ? d.elevation[0] : d.elevation;
+      if(elev != null && elev > -500 && elev < 9000) return Math.round(elev);
+    } catch(e) { continue; }
+  }
+  return null;
+}
+
+
+async function getMeteo(lat,lon) {
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`
+    + `&current=temperature_2m,relative_humidity_2m,soil_moisture_0_to_1cm,surface_pressure`
+    + `&current=soil_temperature_0cm,wind_speed_10m,cloud_cover`
+    + `&hourly=surface_pressure`
+    + `&daily=precipitation_sum,temperature_2m_max,temperature_2m_min,relative_humidity_2m_max`
+    + `&past_days=14&forecast_days=1`
+    + `&timezone=auto`;
+  const r=await fetch(url);
+  const d=await r.json();
+  const precip = d.daily?.precipitation_sum || [];
+  const tempMax = d.daily?.temperature_2m_max || [];
+  const tempMin = d.daily?.temperature_2m_min || [];
+  const umMax   = d.daily?.relative_humidity_2m_max || [];
+  const dates   = d.daily?.time || [];
+  // Somma precipitazioni su finestre diverse
+  const pioggia14 = precip.reduce((a,v)=>a+(v||0),0);          // ultimi 14gg
+  const pioggia10 = precip.slice(-10).reduce((a,v)=>a+(v||0),0); // ultimi 10gg
+  const pioggia3  = precip.slice(-3).reduce((a,v)=>a+(v||0),0);  // ultimi 3gg
+  let giorniSeccita = 0;
+  for(let i=precip.length-1;i>=0;i--){ if((precip[i]||0)<1) giorniSeccita++; else break; }
+  // Ultimi 7 giorni per il grafico (escludiamo oggi parziale)
+  // Prendi gli ultimi 7 giorni completi (escludi oggi che è parziale)
+  const nDays = dates.length;
+  const startIdx = Math.max(0, nDays - 8); // 7 giorni + escludi oggi
+  const endIdx = nDays - 1;
+  const giorni7 = dates.slice(startIdx, endIdx).map((date, i) => {
+    const idx = startIdx + i;
+    return {
+      date,
+      pioggia: Math.round((precip[idx]||0)*10)/10,
+      tMax: tempMax[idx]!=null ? Math.round(tempMax[idx]*10)/10 : null,
+      tMin: tempMin[idx]!=null ? Math.round(tempMin[idx]*10)/10 : null,
+      um: umMax[idx]!=null ? Math.round(umMax[idx]) : null,
+    };
+  });
+  // Tendenza pressione: confronta media ultime 3h con media 3-6h fa
+  const pressureHourly = d.hourly?.surface_pressure || [];
+  const nH = pressureHourly.length;
+  const pressNow = nH>=3 ? pressureHourly.slice(-3).reduce((a,v)=>a+(v||0),0)/3 : null;
+  const pressPrev = nH>=6 ? pressureHourly.slice(-6,-3).reduce((a,v)=>a+(v||0),0)/3 : null;
+  const pressione = d.current?.surface_pressure ?? pressNow;
+  let tendenzaPressione = null; // "salita", "stabile", "discesa"
+  if(pressNow!=null && pressPrev!=null) {
+    const delta = pressNow - pressPrev;
+    if(delta > 1.5) tendenzaPressione = "salita";
+    else if(delta < -1.5) tendenzaPressione = "discesa";
+    else tendenzaPressione = "stabile";
+  }
+  const tMax0 = d.daily?.temperature_2m_max?.[d.daily.temperature_2m_max.length-1];
+  const tMin0 = d.daily?.temperature_2m_min?.[d.daily.temperature_2m_min.length-1];
+  const escursione = (tMax0!=null && tMin0!=null) ? Math.round((tMax0-tMin0)*10)/10 : null;
+  return {
+    temp: Math.round(d.current.temperature_2m*10)/10,
+    um: d.current.relative_humidity_2m,
+    soilMoist: d.current.soil_moisture_0_to_1cm!=null ? Math.round(d.current.soil_moisture_0_to_1cm*100) : null,
+    pioggia14: Math.round(pioggia14*10)/10,
+    pioggia10: Math.round(pioggia10*10)/10,
+    pioggia3:  Math.round(pioggia3*10)/10,
+    giorniSeccita,
+    giorni7,
+    pressione: pressione!=null ? Math.round(pressione*10)/10 : null,
+    tendenzaPressione,
+    tSuolo: d.current?.soil_temperature_0cm!=null ? Math.round(d.current.soil_temperature_0cm*10)/10 : null,
+    vento: d.current?.wind_speed_10m!=null ? Math.round(d.current.wind_speed_10m) : null,
+    nuvolosita: d.current?.cloud_cover!=null ? Math.round(d.current.cloud_cover) : null,
+    escursione,
+    tMax: tMax0!=null ? Math.round(tMax0*10)/10 : null,
+    tMin: tMin0!=null ? Math.round(tMin0*10)/10 : null,
+  };
+}
+
+async function getSoil(lat,lon) {
+  try {
+    // OpenLandMap: pH, carbonio organico, sabbia/argilla — molto più veloce di SoilGrids
+    const base = "https://api.openlandmap.org/query/point";
+    const params = `lat=${lat}&lon=${lon}&properties=sol_ph.h2o_usda.4c1a2a_m,sol_organic.carbon_usda.6a1c_m,sol_texture.class_usda.tt_m&depth=0-10cm&stats=mean`;
+    const ctrl = new AbortController();
+    const tid = setTimeout(()=>ctrl.abort(), 6000);
+    const r = await fetch(`${base}?${params}`, {signal: ctrl.signal});
+    clearTimeout(tid);
+    if(!r.ok) throw new Error("OpenLandMap HTTP "+r.status);
+    const d = await r.json();
+    const props = d?.properties;
+    if(!props) throw new Error("no props");
+
+    // pH: valore diretto (es. 6.2)
+    const phRaw = props["sol_ph.h2o_usda.4c1a2a_m"]?.["0-10cm"]?.mean;
+    const ph = phRaw!=null ? Math.round(phRaw*10)/10 : null;
+
+    // Carbonio organico in g/kg → % sostanza organica (×1.72 per humus)
+    const socRaw = props["sol_organic.carbon_usda.6a1c_m"]?.["0-10cm"]?.mean;
+    const org = socRaw!=null ? Math.round(socRaw/10*1.72*10)/10 : null;
+
+    // Texture class: sandy, loamy, clay, silty, etc.
+    const texRaw = props["sol_texture.class_usda.tt_m"]?.["0-10cm"]?.mean;
+    let tipo = null;
+    if(texRaw!=null){
+      const t = Math.round(texRaw);
+      // USDA texture classes 1-12
+      if(t<=3) tipo="sabbioso";
+      else if(t<=5) tipo="franco";
+      else if(t<=8) tipo="limoso";
+      else if(t<=10) tipo="argilloso";
+      else tipo="franco";
+    }
+
+    return { ph: null, org, tipo, source:"OpenLandMap" }; // pH da vegetazione
+  } catch(e) {
+    // Secondo fallback: stima euristica da quota e vegetazione
+    return estimateSoilFromContext(lat, lon);
+  }
+}
+
+function estimateSoilFromContext(lat, lon) {
+  // Stima statistica per l'Italia centrale basata su coordinate
+  const quota = state.quota || 400;
+  const veg = state.vegSel || new Set();
+  let ph = 6.0, tipo = "franco", org = 3.0;
+  if(quota > 1200) { ph = 5.2; tipo = "limoso"; org = 4.5; }
+  else if(quota > 600) { ph = 5.8; tipo = "franco"; org = 3.5; }
+  else { ph = 6.5; tipo = "franco"; org = 2.5; }
+  if(veg.has("abeti")||veg.has("faggi")) { ph -= 0.5; org += 1.0; }
+  if(veg.has("calcareo")||veg.has("prati")) { ph += 0.5; tipo = "calcareo"; }
+  return { ph: null, org: Math.round(org*10)/10, tipo, source:"Stima locale" }; // pH da vegetazione
+}
+
+async function reverseGeocode(lat,lon) {
+  try {
+    const ctrl = new AbortController();
+    const tid = setTimeout(()=>ctrl.abort(), 5000);
+    // zoom=18 = massima precisione (strada/edificio)
+    const r = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&zoom=18&addressdetails=1`,
+      {signal: ctrl.signal}
+    );
+    clearTimeout(tid);
+    const d = await r.json();
+    const a = d.address;
+
+    // Cerca prima nome del bosco/parco/area naturale nel display_name di OSM
+    // Nominatim mette il nome del POI più vicino come primo elemento del display_name
+    const displayParts = (d.display_name||"").split(", ");
+    const firstPart = displayParts[0]||"";
+
+    // Parole chiave che indicano un'area naturale rilevante per i funghi
+    const keywords = ["bosco","foresta","pineta","parco","riserva","oasi","macchia","selva","faggeta","castagneto","querceto","naturalista","monte","colle","lago","valle","area"];
+    const isNatural = keywords.some(k => firstPart.toLowerCase().includes(k));
+    const nomeNaturale = isNatural ? firstPart : null;
+
+    // Gerarchia per nome del luogo abitato
+    const frazione = a.suburb||a.quarter||a.hamlet||a.village;
+    const comune = a.city||a.town||a.municipality;
+    const localita = frazione||(comune||a.county||a.state||"zona");
+
+    // Combina: se c'è un bosco noto, mostralo con il comune
+    if(nomeNaturale && comune) return nomeNaturale+" - "+comune;
+    if(nomeNaturale) return nomeNaturale;
+    if(frazione && comune && frazione !== comune) return frazione+" ("+comune+")";
+    return localita;
+  } catch(e) { return "zona"; }
+}
+
 async function callClaude(prompt, useWebSearch=false) {
   const key = getApiKey();
   if(!key) throw new Error("No API key");
@@ -1718,25 +1711,6 @@ function renderSpecie(list) {
 function toggleDetail(i) {
   document.getElementById("sd-"+i).classList.toggle("open");
   document.getElementById("sr-"+i).classList.toggle("open");
-}
-
-function renderSegnalazioni() {
-  const el=document.getElementById("segn-content");
-  const empty=document.getElementById("segn-empty");
-  if(!segnalazioni.length){if(empty)empty.style.display="block";return;}
-  if(empty)empty.style.display="none";
-  const tipoLabel={forum:"Forum & social",meteo:"Meteo recente",specie:"Specie avvistate",zona:"Condizioni zona"};
-  el.innerHTML=`<div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">${segnalazioni.length} segnalazioni · ${state.zona||"zona non rilevata"}</div>`+
-    segnalazioni.map(s=>`
-      <div class="segn-card">
-        <span class="segn-tipo ${s.tipo||'zona'}">${tipoLabel[s.tipo]||"Segnalazione"}</span>
-        <div class="segn-testo">${s.testo}</div>
-        ${s.fonte?`<div class="segn-fonte">Fonte: ${s.fonte}</div>`:""}
-      </div>`).join("");
-}
-
-function updateSegnBadge() {
-  document.getElementById("segn-badge").textContent = segnalazioni.length?` (${segnalazioni.length})`:"";
 }
 
 async function verificaFav(id) {
@@ -2343,20 +2317,6 @@ async function analyzeCoords() {
   document.getElementById("btn-clear").style.display="inline-flex";
   if(favorites.length) document.getElementById("btn-fav-check").style.display="inline-flex";
 
-  setStatus("Analisi AI...");
-  document.getElementById("ai-spin").style.display="inline-block";
-  try {
-    const mese = new Date().toLocaleDateString("it-IT",{month:"long"});
-    const vegStr = [...state.vegSel].join(", ")||"non specificata";
-    const top3 = spList.slice(0,3).map(s=>`${s.nome} (${s.pct}%)`).join(", ");
-    const p = `Esperto micologo italiano. In 3-4 frasi pratiche: zona ${state.zona}, coord ${lat.toFixed(3)},${lon.toFixed(3)}, temp ${temp}°C, umidità ${um}%, quota ${quota}m, pH ${soil.ph??'N/D'}, suolo ${soil.tipo??'N/D'}, vegetazione: ${vegStr}, mese: ${mese}, piogge 10gg: ${state.piogge?.pioggia10??'N/D'}mm. Specie: ${top3}. Consigli pratici. No preambolo.`;
-    const d = await callClaude(p);
-    document.getElementById("analisi-testo").textContent = d.content?.[0]?.text||"";
-  } catch(e) { document.getElementById("analisi-testo").textContent="Analisi non disponibile."; }
-  document.getElementById("ai-spin").style.display="none";
-
-  setStatus("Ricerca segnalazioni web...");
-  await searchWeb(false);
   setStatus("", false);
 
   if(btn) { btn.disabled=false; btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> Analizza'; }
@@ -2368,40 +2328,6 @@ async function analyzeCoords() {
   }
 }
 
-
-async function searchWeb(manual=false) {
-  const btn=document.getElementById("btn-search");
-  if(btn) btn.disabled=true;
-  setStatus("Ricerca web segnalazioni...", true, "status-segn");
-
-  const zona=state.zona||"Italia";
-  const mese=new Date().toLocaleDateString("it-IT",{month:"long",year:"numeric"});
-  const top3=state.lastSpecie?state.lastSpecie.slice(0,3).map(s=>s.nome).join(", "):"porcini, gallinacci, ovuli";
-
-  try{
-    const d=await callClaude(
-      `Sei un assistente micologico. Fai ricerche web su: raccolta funghi ${zona} ${mese}, piogge recenti ${zona} funghi, specie funghi avvistate ${zona} 2026, condizioni boschi ${zona} funghi.
-Restituisci SOLO un JSON valido con questa struttura (nessun testo prima o dopo):
-{"segnalazioni":[{"tipo":"forum","testo":"...","fonte":"..."},{"tipo":"meteo","testo":"...","fonte":"..."},{"tipo":"specie","testo":"...","fonte":"..."},{"tipo":"zona","testo":"...","fonte":"..."}]}
-I tipi validi sono: forum, meteo, specie, zona. Includi 6-8 segnalazioni totali, concise (max 2 frasi ciascuna).`,
-      true
-    );
-    const texts=d.content.filter(b=>b.type==="text").map(b=>b.text).join("");
-    const match=texts.replace(/```json|```/g,"").trim().match(/\{[\s\S]*\}/);
-    if(match){
-      const parsed=JSON.parse(match[0]);
-      segnalazioni=parsed.segnalazioni||[];
-    }
-  }catch(e){
-    segnalazioni=[{tipo:"zona",testo:"Ricerca web non disponibile al momento. Riprova tra qualche secondo.",fonte:""}];
-  }
-
-  setStatus("",false,"status-segn");
-  renderSegnalazioni();
-  updateSegnBadge();
-  if(btn){btn.disabled=false;}
-  if(manual) switchTab("segnalazioni");
-}
 
 function populateRadarFromFav(fav, m, soil, piogge, spList, score) {
   // Aggiorna stato
@@ -2589,7 +2515,7 @@ function checkNotifPerm(){
 async function reqNotif(){notifPerm=await Notification.requestPermission();checkNotifPerm();renderFavList();}
 
 function switchTab(t){
-  ["radar","segnalazioni","terreno","preferiti","crediti"].forEach(function(n){
+  ["radar","terreno","preferiti"].forEach(function(n){
     var btn = document.querySelector('[data-tab="'+n+'"]');
     if(btn) {
       if(n===t) btn.classList.add("active");
@@ -2602,12 +2528,10 @@ function switchTab(t){
     }
   });
   if(t==="preferiti") { checkNotifPerm(); renderFavList(); }
-  if(t==="segnalazioni" && segnalazioni.length) renderSegnalazioni();
-  if(t==="crediti") renderCrediti();
 }
 
 // ─── INIT ────────────────────────────────────────────────────────────────────
-initApiKeyUI(); initVeg(); initFavVeg(); renderFavList(); updateFavBadge(); renderCrediti();
+initVeg(); initFavVeg(); renderFavList(); updateFavBadge();
 // Tab click listeners
 document.querySelectorAll('#tabs-bar .tab').forEach(function(b) {
   b.addEventListener('click', function() { switchTab(b.getAttribute('data-tab')); });
