@@ -1018,10 +1018,10 @@ function calcSpecie(t,u,q,soil,veg,month,piogge={}) {
     if(inStagione) fattori.push({ok:true,txt:"stagione ottimale"});
     else if(bordoStagione) fattori.push({ok:null,txt:"bordo stagione"});
     // Fase nascita nei fattori
-    const faseLabel2={troppo_recente:"pioggia recente — terreno saturo",fase_attesa:"in attesa (1-2gg fa)",fase_ottimale:"fase ottimale ✓",fase_tardiva:"fase tardiva (5-10gg fa)",troppo_secco:"troppo secco"};
-    const faseOk2={fase_ottimale:true,fase_tardiva:null,troppo_recente:false,fase_attesa:null,troppo_secco:false};
     if(fase&&fase!=="sconosciuta") {
-      fattori.push({ok:faseOk2[fase]??null, txt:faseLabel2[fase]||fase+" ("+p14+"mm/14gg)"});
+      const fL={troppo_recente:"pioggia recente — terreno saturo",fase_attesa:"in attesa (1-2gg)",fase_ottimale:"fase ottimale ✓ ("+p14+"mm/14gg)",fase_tardiva:"fase tardiva ("+p14+"mm/14gg)",troppo_secco:"troppo secco ("+p14+"mm/14gg)"};
+      const fO={fase_ottimale:true,fase_tardiva:null,troppo_recente:false,fase_attesa:null,troppo_secco:false};
+      fattori.push({ok:fO[fase]??null, txt:fL[fase]||fase});
     }
     return {...sp, pct:Math.min(99,Math.round((score/max)*100)), fattori};;
   }).sort((a,b)=>b.pct-a.pct);
@@ -1113,12 +1113,12 @@ async function getMeteoMulti(lat, lon) {
     escursione: valid[0].escursione,
     tMax: valid[0].tMax,
     tMin: valid[0].tMin,
-    tNotte: valid[0].tNotte ?? null,
-    tGiorno: valid[0].tGiorno ?? null,
-    tPesata: valid[0].tPesata ?? null,
-    faseNascita: valid[0].faseNascita ?? null,
-    qualitaPioggia: valid[0].qualitaPioggia ?? null,
-    mmUltimi24h: valid[0].mmUltimi24h ?? 0,
+    tNotte: valid[0].tNotte??null,
+    tGiorno: valid[0].tGiorno??null,
+    tPesata: valid[0].tPesata??null,
+    faseNascita: valid[0].faseNascita??null,
+    qualitaPioggia: valid[0].qualitaPioggia??null,
+    mmUltimi24h: valid[0].mmUltimi24h??0,
   };
 }
 
@@ -1235,30 +1235,26 @@ async function getMeteo(lat,lon) {
   const tMax0 = d.daily?.temperature_2m_max?.[d.daily.temperature_2m_max.length-1];
   const tMin0 = d.daily?.temperature_2m_min?.[d.daily.temperature_2m_min.length-1];
   const escursione = (tMax0!=null && tMin0!=null) ? Math.round((tMax0-tMin0)*10)/10 : null;
-  // T° notturna/diurna
-  const tempHourly = d.hourly?.temperature_2m || [];
-  const nH2 = tempHourly.length;
-  let tNotte=null, tGiorno=null;
-  if(nH2>=24) {
-    const notteOre=[22,23,0,1,2,3,4,5,6], giornoOre=[7,8,9,10,11,12,13,14,15,16,17,18,19,20,21];
-    const nv=[], gv=[];
-    for(let i=nH2-24;i<nH2;i++){const o=i%24;if(notteOre.includes(o)&&tempHourly[i]!=null)nv.push(tempHourly[i]);if(giornoOre.includes(o)&&tempHourly[i]!=null)gv.push(tempHourly[i]);}
-    if(nv.length) tNotte=Math.round(nv.reduce((a,b)=>a+b,0)/nv.length*10)/10;
-    if(gv.length) tGiorno=Math.round(gv.reduce((a,b)=>a+b,0)/gv.length*10)/10;
+  // T° notturna/diurna pesata
+  const tempH=d.hourly?.temperature_2m||[], nH2=tempH.length;
+  let tNotte=null,tGiorno=null;
+  if(nH2>=24){
+    const nv=[],gv=[];
+    for(let i=nH2-24;i<nH2;i++){const o=i%24;if([22,23,0,1,2,3,4,5,6].includes(o)&&tempH[i]!=null)nv.push(tempH[i]);else if(o>=7&&o<=21&&tempH[i]!=null)gv.push(tempH[i]);}
+    if(nv.length)tNotte=Math.round(nv.reduce((a,b)=>a+b,0)/nv.length*10)/10;
+    if(gv.length)tGiorno=Math.round(gv.reduce((a,b)=>a+b,0)/gv.length*10)/10;
   }
   const tPesata=(tNotte!=null&&tGiorno!=null)?Math.round((tNotte*0.6+tGiorno*0.4)*10)/10:null;
-  // Fase nascita
-  const precipHourly=d.hourly?.precipitation||[];
-  const nPH=precipHourly.length;
-  const precip24h=precipHourly.slice(-24);
-  const mmNotte24=precip24h.filter((_,i)=>{const o=i%24;return o>=22||o<=6;}).reduce((a,v)=>a+(v||0),0);
-  const mmPom24=precip24h.filter((_,i)=>{const o=i%24;return o>=12&&o<=18;}).reduce((a,v)=>a+(v||0),0);
-  const mmMatt24=precip24h.filter((_,i)=>{const o=i%24;return o>=6&&o<12;}).reduce((a,v)=>a+(v||0),0);
-  const mmUltimi24h=precip24h.reduce((a,v)=>a+(v||0),0);
-  let oreDallUltima=0;
-  for(let i=precipHourly.length-1;i>=0;i--){if((precipHourly[i]||0)>=0.5)break;oreDallUltima++;}
-  const qualitaPioggia=mmNotte24>mmPom24?"notturna":mmMatt24>mmPom24?"mattutina":mmPom24>1?"pomeridiana":"assente";
-  const faseNascita=oreDallUltima<24?"troppo_recente":oreDallUltima<48?"fase_attesa":oreDallUltima<120?"fase_ottimale":oreDallUltima<240?"fase_tardiva":"troppo_secco";
+  // Analisi piogge orarie
+  const pH=d.hourly?.precipitation||[], nPH=pH.length;
+  const p24=pH.slice(-24);
+  const mmN=p24.filter((_,i)=>{const o=i%24;return o>=22||o<=6;}).reduce((a,v)=>a+(v||0),0);
+  const mmP=p24.filter((_,i)=>{const o=i%24;return o>=12&&o<=18;}).reduce((a,v)=>a+(v||0),0);
+  const mmM=p24.filter((_,i)=>{const o=i%24;return o>=6&&o<12;}).reduce((a,v)=>a+(v||0),0);
+  const mmU24=p24.reduce((a,v)=>a+(v||0),0);
+  let ore=0; for(let i=pH.length-1;i>=0;i--){if((pH[i]||0)>=0.5)break;ore++;}
+  const qualitaPioggia=mmN>mmP?"notturna":mmM>mmP?"mattutina":mmP>1?"pomeridiana":"assente";
+  const faseNascita=ore<24?"troppo_recente":ore<48?"fase_attesa":ore<120?"fase_ottimale":ore<240?"fase_tardiva":"troppo_secco";
 
   return {
     temp: Math.round(d.current.temperature_2m*10)/10,
@@ -1278,7 +1274,7 @@ async function getMeteo(lat,lon) {
     tMax: tMax0!=null ? Math.round(tMax0*10)/10 : null,
     tMin: tMin0!=null ? Math.round(tMin0*10)/10 : null,
     tNotte, tGiorno, tPesata,
-    faseNascita, qualitaPioggia, mmUltimi24h,
+    faseNascita, qualitaPioggia, mmUltimi24h:mmU24,
   };
 }
 
@@ -1418,12 +1414,12 @@ async function getMeteoMulti(lat, lon) {
     escursione: valid[0].escursione,
     tMax: valid[0].tMax,
     tMin: valid[0].tMin,
-    tNotte: valid[0].tNotte ?? null,
-    tGiorno: valid[0].tGiorno ?? null,
-    tPesata: valid[0].tPesata ?? null,
-    faseNascita: valid[0].faseNascita ?? null,
-    qualitaPioggia: valid[0].qualitaPioggia ?? null,
-    mmUltimi24h: valid[0].mmUltimi24h ?? 0,
+    tNotte: valid[0].tNotte??null,
+    tGiorno: valid[0].tGiorno??null,
+    tPesata: valid[0].tPesata??null,
+    faseNascita: valid[0].faseNascita??null,
+    qualitaPioggia: valid[0].qualitaPioggia??null,
+    mmUltimi24h: valid[0].mmUltimi24h??0,
   };
 }
 
@@ -1540,30 +1536,26 @@ async function getMeteo(lat,lon) {
   const tMax0 = d.daily?.temperature_2m_max?.[d.daily.temperature_2m_max.length-1];
   const tMin0 = d.daily?.temperature_2m_min?.[d.daily.temperature_2m_min.length-1];
   const escursione = (tMax0!=null && tMin0!=null) ? Math.round((tMax0-tMin0)*10)/10 : null;
-  // T° notturna/diurna
-  const tempHourly = d.hourly?.temperature_2m || [];
-  const nH2 = tempHourly.length;
-  let tNotte=null, tGiorno=null;
-  if(nH2>=24) {
-    const notteOre=[22,23,0,1,2,3,4,5,6], giornoOre=[7,8,9,10,11,12,13,14,15,16,17,18,19,20,21];
-    const nv=[], gv=[];
-    for(let i=nH2-24;i<nH2;i++){const o=i%24;if(notteOre.includes(o)&&tempHourly[i]!=null)nv.push(tempHourly[i]);if(giornoOre.includes(o)&&tempHourly[i]!=null)gv.push(tempHourly[i]);}
-    if(nv.length) tNotte=Math.round(nv.reduce((a,b)=>a+b,0)/nv.length*10)/10;
-    if(gv.length) tGiorno=Math.round(gv.reduce((a,b)=>a+b,0)/gv.length*10)/10;
+  // T° notturna/diurna pesata
+  const tempH=d.hourly?.temperature_2m||[], nH2=tempH.length;
+  let tNotte=null,tGiorno=null;
+  if(nH2>=24){
+    const nv=[],gv=[];
+    for(let i=nH2-24;i<nH2;i++){const o=i%24;if([22,23,0,1,2,3,4,5,6].includes(o)&&tempH[i]!=null)nv.push(tempH[i]);else if(o>=7&&o<=21&&tempH[i]!=null)gv.push(tempH[i]);}
+    if(nv.length)tNotte=Math.round(nv.reduce((a,b)=>a+b,0)/nv.length*10)/10;
+    if(gv.length)tGiorno=Math.round(gv.reduce((a,b)=>a+b,0)/gv.length*10)/10;
   }
   const tPesata=(tNotte!=null&&tGiorno!=null)?Math.round((tNotte*0.6+tGiorno*0.4)*10)/10:null;
-  // Fase nascita
-  const precipHourly=d.hourly?.precipitation||[];
-  const nPH=precipHourly.length;
-  const precip24h=precipHourly.slice(-24);
-  const mmNotte24=precip24h.filter((_,i)=>{const o=i%24;return o>=22||o<=6;}).reduce((a,v)=>a+(v||0),0);
-  const mmPom24=precip24h.filter((_,i)=>{const o=i%24;return o>=12&&o<=18;}).reduce((a,v)=>a+(v||0),0);
-  const mmMatt24=precip24h.filter((_,i)=>{const o=i%24;return o>=6&&o<12;}).reduce((a,v)=>a+(v||0),0);
-  const mmUltimi24h=precip24h.reduce((a,v)=>a+(v||0),0);
-  let oreDallUltima=0;
-  for(let i=precipHourly.length-1;i>=0;i--){if((precipHourly[i]||0)>=0.5)break;oreDallUltima++;}
-  const qualitaPioggia=mmNotte24>mmPom24?"notturna":mmMatt24>mmPom24?"mattutina":mmPom24>1?"pomeridiana":"assente";
-  const faseNascita=oreDallUltima<24?"troppo_recente":oreDallUltima<48?"fase_attesa":oreDallUltima<120?"fase_ottimale":oreDallUltima<240?"fase_tardiva":"troppo_secco";
+  // Analisi piogge orarie
+  const pH=d.hourly?.precipitation||[], nPH=pH.length;
+  const p24=pH.slice(-24);
+  const mmN=p24.filter((_,i)=>{const o=i%24;return o>=22||o<=6;}).reduce((a,v)=>a+(v||0),0);
+  const mmP=p24.filter((_,i)=>{const o=i%24;return o>=12&&o<=18;}).reduce((a,v)=>a+(v||0),0);
+  const mmM=p24.filter((_,i)=>{const o=i%24;return o>=6&&o<12;}).reduce((a,v)=>a+(v||0),0);
+  const mmU24=p24.reduce((a,v)=>a+(v||0),0);
+  let ore=0; for(let i=pH.length-1;i>=0;i--){if((pH[i]||0)>=0.5)break;ore++;}
+  const qualitaPioggia=mmN>mmP?"notturna":mmM>mmP?"mattutina":mmP>1?"pomeridiana":"assente";
+  const faseNascita=ore<24?"troppo_recente":ore<48?"fase_attesa":ore<120?"fase_ottimale":ore<240?"fase_tardiva":"troppo_secco";
 
   return {
     temp: Math.round(d.current.temperature_2m*10)/10,
@@ -1583,7 +1575,7 @@ async function getMeteo(lat,lon) {
     tMax: tMax0!=null ? Math.round(tMax0*10)/10 : null,
     tMin: tMin0!=null ? Math.round(tMin0*10)/10 : null,
     tNotte, tGiorno, tPesata,
-    faseNascita, qualitaPioggia, mmUltimi24h,
+    faseNascita, qualitaPioggia, mmUltimi24h:mmU24,
   };
 }
 
@@ -1773,58 +1765,42 @@ async function verificaFav(id) {
   const fav = favorites.find(f=>f.id===id);
   if(!fav) return;
   const btn = document.getElementById("vbtn-"+id);
-  const resetBtn = () => { if(btn) { btn.disabled=false; btn.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l5 5L20 7"/></svg> Verifica'; }};
   if(btn) { btn.disabled=true; btn.innerHTML='<div class="spinner"></div>'; }
-  const safetyTimer = setTimeout(resetBtn, 25000);
   try {
-    let m = {temp:15,um:65,pioggia14:0,pioggia10:0,pioggia3:0,giorniSeccita:0,giorni7:[],tNotte:null,tGiorno:null,tPesata:null,faseNascita:null,qualitaPioggia:null,mmUltimi24h:0};
-    let meteoFallito = false;
-    try {
-      const r = await Promise.race([getMeteoMulti(fav.lat,fav.lon), new Promise(res=>setTimeout(()=>res(null),18000))]);
-      if(r) m = r; else meteoFallito = true;
-    } catch(e) { meteoFallito = true; }
-    if(meteoFallito) {
-      if(btn) btn.innerHTML = '⚠ Dati meteo non disponibili — uso valori di default';
-      await new Promise(r=>setTimeout(r,2000));
-      if(btn) btn.innerHTML = '<div class="spinner"></div>';
+    const [meteoRes, soilRes, elevRes] = await Promise.allSettled([
+      getMeteoMulti(fav.lat, fav.lon),
+      getSoilMulti(fav.lat, fav.lon),
+      getElevationMulti(fav.lat, fav.lon)
+    ]);
+    const m = (meteoRes.status==="fulfilled" && meteoRes.value) ? meteoRes.value : {temp:15,um:65,soilMoist:null,pioggia14:0,pioggia10:0,pioggia3:0,giorniSeccita:0,giorni7:[]};
+    const s = soilRes.status==="fulfilled" ? soilRes.value : null;
+    // Aggiorna quota con dato reale SRTM se non inserita manualmente
+    if(elevRes.status==="fulfilled" && elevRes.value!=null && !fav.quotaManuale) {
+      fav.quota = elevRes.value;
     }
-    let s = null;
-    try {
-      s = await Promise.race([getSoilMulti(fav.lat,fav.lon), new Promise(res=>setTimeout(()=>res(null),12000))]);
-    } catch(e) {}
-    try {
-      if(!fav.quotaManuale) {
-        const elev = await Promise.race([getElevationMulti(fav.lat,fav.lon), new Promise(res=>setTimeout(()=>res(null),10000))]);
-        if(elev!=null) fav.quota=elev;
-      }
-    } catch(e) {}
     const soil = s||{ph:null,tipo:null};
     const piogge = {
       pioggia14:m.pioggia14||0,pioggia10:m.pioggia10||0,pioggia3:m.pioggia3||0,
       giorniSeccita:m.giorniSeccita??0,
-      pressione:{valore:m.pressione,tendenza:m.tendenzaPressione},
+      pressione:{valore:m.pressione??null,tendenza:m.tendenzaPressione??null},
       tNotte:m.tNotte??null,tGiorno:m.tGiorno??null,tPesata:m.tPesata??null,
       faseNascita:m.faseNascita??null,qualitaPioggia:m.qualitaPioggia??null,
       mmUltimi24h:m.mmUltimi24h||0,
     };
-    const vegSet=new Set(fav.veg||[]);
-    const month=new Date().getMonth();
-    const spList=calcSpecie(m.temp,m.um,fav.quota,soil,vegSet,month,piogge);
-    const sc=globalScore(m.temp,m.um,fav.quota,soil,piogge,spList);
-    const lbl=scoreToLabel(sc);
-    fav.lastScore=sc;fav.lastCls=lbl.cls;fav.lastLabel=lbl.label;
+    state.macroarea = getMacroarea(fav.lat, fav.lon);
+    const vegSet = new Set(fav.veg||[]);
+    const month = new Date().getMonth();
+    const spList = calcSpecie(m.temp, m.um, fav.quota, soil, vegSet, month, piogge);
+    const sc = globalScore(m.temp, m.um, fav.quota, soil, piogge, spList);
+    const lbl = scoreToLabel(sc);
+    fav.lastScore=sc; fav.lastCls=lbl.cls; fav.lastLabel=lbl.label;
     fav.lastSpecie=spList.slice(0,3).map(sp=>({nome:sp.nome,pct:sp.pct,icon:sp.icon}));
-    saveFavs();renderFavList();
-    if(sc>=40&&fav.notifiche!==false) sendPush(fav.nome,lbl.label,sc);
-    populateRadarFromFav(fav,m,soil,piogge,spList,sc);
-  } catch(e) {
-    console.error(e);
-  } finally {
-    clearTimeout(safetyTimer);
-    resetBtn();
-  }
+    saveFavs(); renderFavList();
+    if(sc>=40 && fav.notifiche!==false) sendPush(fav.nome, lbl.label, sc);
+    populateRadarFromFav(fav, m, soil, piogge, spList, sc);
+  } catch(e) { console.error(e); }
+  finally { if(btn){btn.disabled=false;btn.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l5 5L20 7"/></svg> Verifica';} }
 }
-
 
 function esportaPreferiti() {
   if(!favorites.length) { alert("Nessun preferito da esportare."); return; }
@@ -1979,11 +1955,11 @@ function renderExtra(extra) {
   const items = [];
   if(state.piogge?.tNotte!=null) {
     const ok=state.piogge.tNotte>=6&&state.piogge.tNotte<=14;
-    items.push({l:"T° notte (22-6)", v:state.piogge.tNotte+"°C", ok});
+    items.push({l:"T° notte (22-6)",v:state.piogge.tNotte+"°C",ok});
   }
   if(state.piogge?.tGiorno!=null) {
     const ok=state.piogge.tGiorno>=10&&state.piogge.tGiorno<=22;
-    items.push({l:"T° giorno (6-22)", v:state.piogge.tGiorno+"°C", ok});
+    items.push({l:"T° giorno (6-22)",v:state.piogge.tGiorno+"°C",ok});
   }
   if(extra.tSuolo!=null) {
     const ok = extra.tSuolo>=8&&extra.tSuolo<=18;
@@ -2000,6 +1976,12 @@ function renderExtra(extra) {
   if(extra.vento!=null) {
     const ok = extra.vento<=20;
     items.push({l:"Vento", v:extra.vento+"km/h", ok});
+  }
+  if(state.piogge?.faseNascita) {
+    const fL={troppo_recente:"Troppo recente ⏳",fase_attesa:"In attesa 🕐",fase_ottimale:"Fase ottimale ✓",fase_tardiva:"Fase tardiva ~",troppo_secco:"Troppo secco ✗"};
+    const fO={fase_ottimale:true,fase_tardiva:null,troppo_recente:false,fase_attesa:null,troppo_secco:false};
+    const f=state.piogge.faseNascita;
+    items.push({l:"Fase nascita",v:fL[f]||f,ok:fO[f]??null});
   }
   if(!items.length) { el.style.display="none"; return; }
   el.style.display="grid";
@@ -2359,7 +2341,7 @@ async function analyzeCoords() {
   const meteoVal = (meteoRes.status==="fulfilled" && meteoRes.value) ? meteoRes.value : null;
   if(meteoVal) {
     temp=meteoVal.temp||15; um=meteoVal.um||65; soilMoist=meteoVal.soilMoist||null;
-    state.piogge={pioggia14:meteoVal.pioggia14||0,pioggia10:meteoVal.pioggia10||0,pioggia3:meteoVal.pioggia3||0,giorniSeccita:meteoVal.giorniSeccita||0,pressione:{valore:meteoVal.pressione,tendenza:meteoVal.tendenzaPressione},tNotte:meteoVal.tNotte,tGiorno:meteoVal.tGiorno,tPesata:meteoVal.tPesata,faseNascita:meteoVal.faseNascita,qualitaPioggia:meteoVal.qualitaPioggia,mmUltimi24h:meteoVal.mmUltimi24h||0};
+    state.piogge={pioggia14:meteoVal.pioggia14||0,pioggia10:meteoVal.pioggia10||0,pioggia3:meteoVal.pioggia3||0,giorniSeccita:meteoVal.giorniSeccita||0,pressione:{valore:meteoVal.pressione,tendenza:meteoVal.tendenzaPressione},tNotte:meteoVal.tNotte??null,tGiorno:meteoVal.tGiorno??null,tPesata:meteoVal.tPesata??null,faseNascita:meteoVal.faseNascita??null,qualitaPioggia:meteoVal.qualitaPioggia??null,mmUltimi24h:meteoVal.mmUltimi24h||0};
     state.pressione={valore:meteoVal.pressione,tendenza:meteoVal.tendenzaPressione};
     state.extra={tSuolo:meteoVal.tSuolo,vento:meteoVal.vento,nuvolosita:meteoVal.nuvolosita,escursione:meteoVal.escursione,tMax:meteoVal.tMax,tMin:meteoVal.tMin};
     state.giorni7=meteoVal.giorni7||[];
@@ -2426,6 +2408,9 @@ function populateRadarFromFav(fav, m, soil, piogge, spList, score) {
   state.zona = fav.nome;
   state.vegSel = new Set(fav.veg||[]);
   state.lastSpecie = spList;
+  state.macroarea = getMacroarea(fav.lat, fav.lon);
+  state.extra = {tSuolo:m.tSuolo??null,vento:m.vento??null,nuvolosita:m.nuvolosita??null,escursione:m.escursione??null};
+  state.pressione = {valore:m.pressione??null,tendenza:m.tendenzaPressione??null};
 
   // Aggiorna campo coordinate nel Radar
   document.getElementById("coords-input").value = fav.lat.toFixed(6)+", "+fav.lon.toFixed(6);
@@ -2452,7 +2437,10 @@ function populateRadarFromFav(fav, m, soil, piogge, spList, score) {
   renderSpecie(spList);
   renderScoreDetail(m.temp, m.um, fav.quota, mergedSoil(), piogge, spList, score);
   renderMeteo7(m.giorni7||[]);
+  renderExtra(state.extra||{});
+  renderPressione(state.pressione);
   document.getElementById("main-content").style.display="block";
+  document.getElementById("btn-clear").style.display="inline-flex";
 
   // Vai al tab Radar
   switchTab("radar");
