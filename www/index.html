@@ -372,31 +372,7 @@ body {
         </div>
         <div class="specie-list" id="specie-list"></div>
       </div>
-
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <div class="card-title" style="margin:0">Analisi AI</div>
-          <div class="spinner" id="ai-spin" style="display:none;border-top-color:var(--green-light)"></div>
-        </div>
-        <div class="analisi-testo" id="analisi-testo"></div>
-      </div>
     </div>
-
-  <!-- ===== SEGNALAZIONI ===== -->
-  </div>
-
-  <div class="panel" id="panel-segnalazioni" style="padding-top:1.25rem">
-    <div class="row-btns">
-      <button class="btn btn-primary" id="btn-search" onclick="searchWeb(true)">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        Cerca segnalazioni ora
-      </button>
-    </div>
-    <div class="status-bar" id="status-segn"><div class="spinner"></div><span id="status-segn-msg">...</span></div>
-    <div id="segn-content">
-      <div class="empty-state" id="segn-empty">Rileva prima la posizione nel tab Radar,<br>oppure clicca "Cerca segnalazioni ora".</div>
-    </div>
-  </div>
 
   <!-- ===== TERRENO ===== -->
   </div>
@@ -835,6 +811,78 @@ const SPECIE_DB = [
    },
    tags:["Pioppi","Primavera-Autunno","Ceppi"],
    desc:"Cresce su ceppi di pioppo e altri latifoglie. Comune in tutta Italia lungo fiumi e canali."},
+
+  {nome:"Galletto",sci:"Cantharellus lutescens",icon:"🌻",
+   cond:{tempMin:8,tempMax:20,umMin:65,umMax:92,phMin:4.0,phMax:6.0,quotaMin:200,quotaMax:1600,org:3},
+   veg:["faggi","abeti","misto"],tipo:["franco","limoso","torboso"],tipoEscluso:["sabbioso","calcareo"],vegEsclusa:["macchia","prati"],
+   stagioni:{default:[8,9,10,11],bassa:[8,9,10,11],alta:[7,8,9,10],alpi:[7,8,9,10],sardegna:[10,11,0,1],sicilia:[10,11,0],sud:[9,10,11],appennino_cs:[8,9,10,11],appennino_c:[8,9,10,11],appennino_n:[8,9,10],litorale:[9,10,11],pianura:[9,10,11]},
+   tags:["Faggete","Abetaie","Autunno"],desc:"Simile al gallinaccio ma più piccolo con gambo cavo giallastro. Cresce in tappeti fitti nelle faggete umide. Profumo fruttato intenso."},
+
+  {nome:"Amanita vaginata",sci:"Amanita vaginata",icon:"🩶",
+   cond:{tempMin:10,tempMax:24,umMin:60,umMax:90,phMin:4.5,phMax:7.0,quotaMin:100,quotaMax:1500,org:2},
+   veg:["faggi","querce","misto","castagni","abeti"],tipo:["franco","sabbioso","limoso"],tipoEscluso:[],vegEsclusa:[],
+   stagioni:{default:[5,6,7,8,9,10],bassa:[5,6,7,8,9,10],alta:[6,7,8,9,10],alpi:[6,7,8,9,10],sardegna:[3,4,5,9,10,11],sicilia:[3,4,5,9,10,11],sud:[4,5,6,9,10,11],appennino_cs:[5,6,7,8,9,10],appennino_c:[5,6,7,8,9,10],appennino_n:[5,6,7,8,9,10],litorale:[5,6,7,8,9,10],pianura:[5,6,7,8,9,10]},
+   tags:["Ubiquitaria","Solo cotta","Volva a sacco"],desc:"Diffusa in tutti i boschi. SOLO cotta — cruda è tossica. Assenza di anello sul gambo. Attenzione: A. phalloides giovane nell'uovo è quasi identica."},
+
+  {nome:"Amanita rubescens",sci:"Amanita rubescens",icon:"🩷",
+   cond:{tempMin:10,tempMax:24,umMin:60,umMax:88,phMin:4.5,phMax:6.5,quotaMin:100,quotaMax:1600,org:2.5},
+   veg:["faggi","abeti","querce","castagni","misto"],tipo:["franco","sabbioso","limoso"],tipoEscluso:[],vegEsclusa:[],
+   stagioni:{default:[5,6,7,8,9,10],bassa:[5,6,7,8,9,10],alta:[6,7,8,9,10],alpi:[6,7,8,9,10],sardegna:[3,4,5,9,10,11],sicilia:[3,4,5,9,10,11],sud:[4,5,6,9,10,11],appennino_cs:[5,6,7,8,9,10],appennino_c:[5,6,7,8,9,10],appennino_n:[5,6,7,8,9,10],litorale:[5,6,7,8,9,10],pianura:[5,6,7,8,9,10]},
+   tags:["Ubiquitaria","Solo cotta","Carne arrossa"],desc:"La carne arrossa al taglio e alla pressione. SOLO cotta — cruda contiene emolisine termolabili. Non confondere con A. pantherina."},
+
+  {nome:"Vescia",sci:"Calvatia/Lycoperdon spp.",icon:"⚽",
+   cond:{tempMin:8,tempMax:24,umMin:55,umMax:85,phMin:5.0,phMax:7.5,quotaMin:0,quotaMax:1500,org:2},
+   veg:["prati","misto","querce","faggi"],tipo:["franco","sabbioso","calcareo"],tipoEscluso:[],vegEsclusa:[],
+   stagioni:{default:[6,7,8,9,10],bassa:[5,6,7,8,9,10,11],alta:[6,7,8,9,10],alpi:[6,7,8,9,10],sardegna:[9,10,11,0,1,2,3,4],sicilia:[9,10,11,0,1,2,3],sud:[5,6,7,8,9,10,11],appennino_cs:[6,7,8,9,10],appennino_c:[6,7,8,9,10],appennino_n:[6,7,8,9,10],litorale:[6,7,8,9,10,11],pianura:[5,6,7,8,9,10,11]},
+   tags:["Prati e boschi","Solo da giovane"],desc:"Commestibile SOLO quando la carne interna è bianca e compatta. Diffusissima ovunque."},
+
+  {nome:"Finferlo invernale",sci:"Craterellus tubaeformis",icon:"🍂",
+   cond:{tempMin:2,tempMax:14,umMin:70,umMax:96,phMin:4.0,phMax:6.0,quotaMin:200,quotaMax:1400,org:3.5},
+   veg:["faggi","abeti","misto"],tipo:["limoso","franco","torboso"],tipoEscluso:["sabbioso","calcareo"],vegEsclusa:["macchia","prati"],areeEscluse:["sicilia","sardegna"],
+   stagioni:{default:[10,11,0,1],bassa:[10,11,0,1,2],alta:[9,10,11],alpi:[9,10,11,0],sud:[10,11,0],appennino_cs:[10,11,0,1],appennino_c:[10,11,0,1],appennino_n:[9,10,11,0],litorale:[10,11,0],pianura:[10,11,0]},
+   tags:["Autunno-inverno","Faggete umide"],desc:"Specie invernale delle faggete umide. Gambo cavo giallastro. Resiste al gelo. Ottimo essiccato."},
+
+  {nome:"Boleto estatino",sci:"Boletus reticulatus",icon:"☀️",
+   cond:{tempMin:14,tempMax:26,umMin:60,umMax:88,phMin:5.0,phMax:7.0,quotaMin:100,quotaMax:1200,org:2.5},
+   veg:["querce","castagni","faggi","misto","lecci"],tipo:["franco","sabbioso","calcareo"],tipoEscluso:[],vegEsclusa:["abeti","prati","macchia"],
+   stagioni:{default:[5,6,7],bassa:[4,5,6,7],alta:[5,6,7,8],alpi:[6,7,8],sardegna:[4,5,6],sicilia:[4,5,6],sud:[4,5,6,7],appennino_cs:[5,6,7],appennino_c:[5,6,7],appennino_n:[5,6,7],litorale:[4,5,6,7],pianura:[4,5,6,7]},
+   tags:["Estate","Quercete","Cappello chiaro screpolato"],desc:"Il porcino estivo (B. aestivalis). Cappello ocra-brunastro, cuticola asciutta e screpolata. Maggio-luglio."},
+
+  {nome:"Boleto dei pini",sci:"Boletus pinophilus",icon:"🌲",
+   cond:{tempMin:6,tempMax:18,umMin:60,umMax:92,phMin:4.0,phMax:6.0,quotaMin:200,quotaMax:1900,org:3.5},
+   veg:["abeti","faggi","castagni","misto"],tipo:["sabbioso","franco","limoso"],tipoEscluso:["calcareo"],vegEsclusa:["querce","macchia","prati","lecci"],
+   stagioni:{default:[4,5,6,7,8,9,10,11],bassa:[4,5,6,9,10,11],alta:[5,6,7,8,9,10],alpi:[5,6,7,8,9,10,11],sardegna:[9,10,11],sicilia:[9,10,11],sud:[4,5,9,10,11],appennino_cs:[4,5,7,8,9,10,11],appennino_c:[4,5,7,8,9,10,11],appennino_n:[4,5,7,8,9,10,11],litorale:[9,10,11],pianura:[9,10,11]},
+   tags:["Pinete","Duplice stagione","Il più grande dei porcini"],desc:"Il porcino rosso — fino a 2kg. Duplice produzione: maggio (primo dell'anno) e tardo autunno (ultimo). Cresce anche sotto faggi e castagni."},
+
+  {nome:"Pinarolo",sci:"Suillus granulatus",icon:"🫙",
+   cond:{tempMin:10,tempMax:22,umMin:60,umMax:88,phMin:4.5,phMax:6.0,quotaMin:0,quotaMax:1500,org:2},
+   veg:["abeti"],tipo:["sabbioso","franco"],tipoEscluso:["calcareo","argilloso"],vegEsclusa:["faggi","querce","castagni","macchia","prati","lecci"],
+   stagioni:{default:[5,6,7,8,9,10],bassa:[5,6,7,8,9,10],alta:[6,7,8,9,10],alpi:[6,7,8,9,10],sardegna:[9,10,11,0,1],sicilia:[9,10,11,0,1],sud:[9,10,11,5,6],appennino_cs:[5,6,7,8,9,10],appennino_c:[5,6,7,8,9,10],appennino_n:[5,6,7,8,9,10],litorale:[5,6,7,8,9,10],pianura:[5,6,7,8,9,10]},
+   tags:["Pinete","Granuli bianchi sul gambo"],desc:"Strettamente legato ai pini. Granuli bianchi sul gambo giovane. Sbucciare il cappello prima della cottura."},
+
+  {nome:"Cortinario",sci:"Cortinarius praestans",icon:"🟣",
+   cond:{tempMin:8,tempMax:18,umMin:65,umMax:90,phMin:6.0,phMax:8.0,quotaMin:200,quotaMax:1600,org:3},
+   veg:["faggi","querce","castagni","misto"],tipo:["calcareo","franco","limoso"],tipoEscluso:["sabbioso"],vegEsclusa:["macchia","prati","abeti","lecci"],areeEscluse:["litorale"],
+   stagioni:{default:[7,8,9,10],bassa:[7,8,9,10],alta:[7,8,9],alpi:[7,8,9,10],sardegna:[9,10,11],sicilia:[9,10,11],sud:[8,9,10],appennino_cs:[8,9,10],appennino_c:[7,8,9,10],appennino_n:[7,8,9,10],pianura:[8,9,10]},
+   tags:["Faggete calcaree","Il gigante dei Cortinari"],desc:"Il più grande del genere (cappello fino a 25cm). Faggete calcaree. ATTENZIONE: identificazione certa obbligatoria — molti Cortinarius sono mortalmente tossici."},
+
+  {nome:"Marzolino",sci:"Morchella esculenta",icon:"🧽",
+   cond:{tempMin:6,tempMax:16,umMin:55,umMax:85,phMin:6.0,phMax:8.0,quotaMin:0,quotaMax:1200,org:2},
+   veg:["pioppi","noccioli","misto","querce","prati"],tipo:["franco","calcareo","limoso","sabbioso"],tipoEscluso:[],vegEsclusa:["abeti"],
+   stagioni:{default:[2,3,4],bassa:[1,2,3,4],alta:[3,4,5],alpi:[4,5,6],sardegna:[1,2,3],sicilia:[1,2,3],sud:[1,2,3,4],appennino_cs:[2,3,4],appennino_c:[2,3,4],appennino_n:[3,4,5],pianura:[2,3,4],litorale:[2,3,4]},
+   tags:["Primavera","Ascomicete","Solo cotto"],desc:"Simile alla spugnola, cappello più tondeggiante. Boschi di latifoglie e vecchi frutteti. TOSSICO DA CRUDO — sempre bollito a lungo."},
+
+  {nome:"Prugnolo",sci:"Calocybe gambosa",icon:"🌸",
+   cond:{tempMin:8,tempMax:20,umMin:50,umMax:80,phMin:6.0,phMax:8.0,quotaMin:0,quotaMax:1200,org:1.5},
+   veg:["prati","macchia","querce","misto"],tipo:["calcareo","franco","sabbioso"],tipoEscluso:[],vegEsclusa:["abeti","faggi"],
+   stagioni:{default:[3,4,5],bassa:[2,3,4,5],alta:[4,5,6],alpi:[4,5,6],sardegna:[1,2,3,4],sicilia:[1,2,3,4],sud:[2,3,4,5],appennino_cs:[3,4,5],appennino_c:[3,4,5],appennino_n:[4,5,6],pianura:[3,4,5],litorale:[3,4,5]},
+   tags:["Primavera","Fungo di San Giorgio","Odore farinoso"],desc:"Il fungo di San Giorgio (23 aprile). Cerchi in radure erbose vicino al prugnolo selvatico. Odore di farina fresca inconfondibile."},
+
+  {nome:"Marzuolo",sci:"Hygrophorus marzuolus",icon:"❄️",
+   cond:{tempMin:-2,tempMax:10,umMin:60,umMax:95,phMin:4.5,phMax:6.5,quotaMin:300,quotaMax:2000,org:3},
+   veg:["abeti","faggi","misto","querce","castagni"],tipo:["limoso","franco","torboso"],tipoEscluso:["sabbioso","calcareo"],vegEsclusa:["macchia","prati","lecci"],areeEscluse:["litorale","pianura","sicilia"],
+   stagioni:{default:[1,2,3,4],bassa:[1,2,3],alta:[2,3,4,5],alpi:[2,3,4,5],sardegna:[1,2,3],sud:[1,2,3],appennino_cs:[2,3,4],appennino_c:[2,3,4],appennino_n:[2,3,4,5]},
+   tags:["Invernale","Sotto la neve","Il dormiente"],desc:"Noto come il 'dormiente'. Emerge allo scioglimento delle nevi in abetaie e faggete. Trovato anche a 500m in cerrete. Uno dei migliori commestibili invernali."},
 ];
 
 // ─── STATO
@@ -872,23 +920,20 @@ function scoreToLabel(s) {
 function globalScore(t,u,q,soil,piogge={},spList) {
   // Calcola score base su meteo/suolo/piogge
   let s=0;
-  // Temperatura pesata notturna/diurna
-  const tEff2 = piogge?.tPesata ?? t;
-  const tN2 = piogge?.tNotte ?? t;
-  if(tN2>=6&&tN2<=14) s+=30;        // notte fresca = ideale
-  else if(tEff2>=8&&tEff2<=18) s+=20;
-  else if(tEff2>=5&&tEff2<=22) s+=10;
+  if(t>=8&&t<=18)s+=30; else if(t>=5&&t<=22)s+=15;
   if(u>=70&&u<=90)s+=25; else if(u>=60)s+=12;
   if(q>=400&&q<=1400)s+=20; else if(q>=200)s+=10;
   if(soil.ph!=null&&soil.ph>=4.5&&soil.ph<=7)s+=10;
-  // Piogge: 40-100mm in 7-14gg + 3-5gg asciutti dopo = condizione ideale
-  const p10=piogge.pioggia14||piogge.pioggia10||0, gsec=piogge.giorniSeccita??0;
-  if(p10>=40&&p10<=100&&gsec>=3&&gsec<=10) s+=15;
-  else if(p10>=25&&p10<=120&&gsec>=2&&gsec<=14) s+=9;
-  else if(p10>=15&&gsec>=1) s+=4;
-  else if(p10>=5) s=Math.min(s,35);
-  else s=Math.min(s,20);
-  if(p10>120) s=Math.max(0,s-8);
+  // Piogge: fase nascita precisa
+  const fase2=piogge?.faseNascita||"sconosciuta";
+  const p14g=piogge?.pioggia14||0;
+  if(fase2==="fase_ottimale"&&p14g>=30) s+=15;
+  else if(fase2==="fase_tardiva"&&p14g>=20) s+=9;
+  else if(fase2==="fase_attesa"&&p14g>=20) s+=6;
+  else if(fase2==="troppo_recente") s=Math.min(s,30);
+  else if(fase2==="troppo_secco"||p14g<10) s=Math.min(s,20);
+  else s+=4;
+  if(p14g>120) s=Math.max(0,s-8);
   // Pressione
   const pres = piogge.pressione||{};
   if(pres.tendenza==="discesa") s=Math.min(100,s+8);
@@ -929,18 +974,13 @@ function calcSpecie(t,u,q,soil,veg,month,piogge={}) {
   return SPECIE_DB.map(sp => {
     let score=0, max=0;
     const c=sp.cond;
-    // Temperatura pesata: 60% notte + 40% giorno se disponibile, altrimenti temp corrente
-    const tEff = piogge.tPesata ?? t;
-    const tN = piogge.tNotte ?? t;
-    const tG = piogge.tGiorno ?? t;
-    // Notte: range ideale spostato verso il basso (micelio ama il fresco notturno)
-    const notteOk = tN >= (c.tempMin-2) && tN <= (c.tempMax-4);
-    const giornoOk = tG >= c.tempMin && tG <= (c.tempMax+2);
+    const tEff=piogge.tPesata??t, tN=piogge.tNotte??t, tG=piogge.tGiorno??t;
+    const notteOk=tN>=(c.tempMin-2)&&tN<=(c.tempMax-4);
+    const giornoOk=tG>=c.tempMin&&tG<=(c.tempMax+2);
     max+=30;
-    if(notteOk && giornoOk) score+=30;          // entrambe ottimali
-    else if(notteOk || giornoOk) score+=20;      // una delle due ottimale
-    else if(tEff>=c.tempMin-3&&tEff<=c.tempMax+3) score+=12; // range accettabile
-    // else 0
+    if(notteOk&&giornoOk) score+=30;
+    else if(notteOk||giornoOk) score+=20;
+    else if(tEff>=c.tempMin-3&&tEff<=c.tempMax+3) score+=12;
     max+=20; if(u>=c.umMin&&u<=c.umMax)score+=20; else if(u>=c.umMin-10)score+=8;
     max+=15;
     if(q>=c.quotaMin&&q<=c.quotaMax) score+=15;
@@ -1004,16 +1044,19 @@ function calcSpecie(t,u,q,soil,veg,month,piogge={}) {
     } else {
       score = 0; // fuori stagione effettiva
     }
-    // Piogge: 40-100mm in 14gg + 3-10gg asciutti = ideale. <5mm = siccità (cap score)
+    // Piogge: logica fase nascita precisa
     max+=18;
-    const p10=piogge.pioggia14||piogge.pioggia10||0, p3=piogge.pioggia3||0, gsec=piogge.giorniSeccita??0;
-    if(p10>=40&&p10<=100&&gsec>=3&&gsec<=10) score+=18;          // ideale
-    else if(p10>=25&&p10<=120&&gsec>=2&&gsec<=14) score+=11;     // buona
-    else if(p10>=15&&gsec>=1) score+=5;                           // discreta
-    else if(p10>=5) score=Math.min(score,Math.round(max*0.35));   // secco: cap 35%
-    else score=Math.min(score,Math.round(max*0.15));               // siccità: cap 15%
-    if(p10>120) score=Math.max(0,score-10);                       // eccesso idrico
-    if(gsec>14) score=Math.max(0,score-8);                        // troppo tempo fa
+    const p14=piogge.pioggia14||0;
+    const fase=piogge.faseNascita||"sconosciuta";
+    const qualita=piogge.qualitaPioggia||"assente";
+    const mm24=piogge.mmUltimi24h||0;
+    if(fase==="fase_ottimale"&&p14>=30) score+=qualita==="notturna"||qualita==="mattutina"?18:14;
+    else if(fase==="fase_tardiva"&&p14>=20) score+=10;
+    else if(fase==="fase_attesa"&&p14>=20) score+=6;
+    else if(fase==="troppo_recente") { score=Math.min(score,Math.round(max*0.25)); if(mm24>10) score=Math.min(score,Math.round(max*0.15)); }
+    else if(fase==="troppo_secco"||p14<10) score=Math.min(score,Math.round(max*0.15));
+    else score+=5;
+    if(p14>120) score=Math.max(0,score-10);
     // Costruisci spiegazione fattori
     const fattori = [];
     if(t>=c.tempMin&&t<=c.tempMax) fattori.push({ok:true,txt:"temp "+t+"°C"});
@@ -1207,7 +1250,7 @@ async function getMeteo(lat,lon) {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`
     + `&current=temperature_2m,relative_humidity_2m,soil_moisture_0_to_1cm,surface_pressure`
     + `&current=soil_temperature_0cm,wind_speed_10m,cloud_cover`
-    + `&hourly=surface_pressure,temperature_2m`
+    + `&hourly=surface_pressure`
     + `&daily=precipitation_sum,temperature_2m_max,temperature_2m_min,relative_humidity_2m_max`
     + `&past_days=14&forecast_days=1`
     + `&timezone=auto`;
@@ -1255,29 +1298,6 @@ async function getMeteo(lat,lon) {
   const tMax0 = d.daily?.temperature_2m_max?.[d.daily.temperature_2m_max.length-1];
   const tMin0 = d.daily?.temperature_2m_min?.[d.daily.temperature_2m_min.length-1];
   const escursione = (tMax0!=null && tMin0!=null) ? Math.round((tMax0-tMin0)*10)/10 : null;
-  // Calcola T media notturna (22-06) e diurna (06-22) sulle ultime 24h
-  const tempHourly = d.hourly?.temperature_2m || [];
-  const nH2 = tempHourly.length;
-  let tNotte = null, tGiorno = null;
-  if(nH2 >= 24) {
-    // Ultime 24h: indici nH2-24 ... nH2-1
-    // Ore notturne: 22,23,0,1,2,3,4,5,6 → in finestra 24h = ore 22-23 del giorno prima + 0-6 di oggi
-    const notteOre = [22,23,0,1,2,3,4,5,6]; // indici ora del giorno
-    const giornoOre = [7,8,9,10,11,12,13,14,15,16,17,18,19,20,21]; // 07-21
-    const notteVals = [], giornoVals = [];
-    for(let i = nH2-24; i < nH2; i++) {
-      const ora = i % 24;
-      if(notteOre.includes(ora) && tempHourly[i] != null) notteVals.push(tempHourly[i]);
-      if(giornoOre.includes(ora) && tempHourly[i] != null) giornoVals.push(tempHourly[i]);
-    }
-    if(notteVals.length) tNotte = Math.round(notteVals.reduce((a,b)=>a+b,0)/notteVals.length*10)/10;
-    if(giornoVals.length) tGiorno = Math.round(giornoVals.reduce((a,b)=>a+b,0)/giornoVals.length*10)/10;
-  }
-  // Temperatura pesata: 60% notte + 40% giorno (se disponibili)
-  const tPesata = (tNotte!=null && tGiorno!=null)
-    ? Math.round((tNotte*0.6 + tGiorno*0.4)*10)/10
-    : null;
-
   return {
     temp: Math.round(d.current.temperature_2m*10)/10,
     um: d.current.relative_humidity_2m,
@@ -1295,9 +1315,6 @@ async function getMeteo(lat,lon) {
     escursione,
     tMax: tMax0!=null ? Math.round(tMax0*10)/10 : null,
     tMin: tMin0!=null ? Math.round(tMin0*10)/10 : null,
-    tNotte,
-    tGiorno,
-    tPesata,
   };
 }
 
@@ -1392,333 +1409,6 @@ async function reverseGeocode(lat,lon) {
   } catch(e) { return "zona"; }
 }
 
-// ─── CAMPIONAMENTO MULTIPUNTO (500m) ─────────────────────────────────────────
-// Offset in gradi per ~500m: 1° lat ≈ 111km, 1° lon ≈ 111km*cos(lat)
-function offsetPoints(lat, lon, meters) {
-  const dLat = meters / 111000;
-  const dLon = meters / (111000 * Math.cos(lat * Math.PI / 180));
-  return [
-    {lat, lon, w:2},                          // centro — peso doppio
-    {lat:lat+dLat, lon, w:1},                 // Nord
-    {lat:lat-dLat, lon, w:1},                 // Sud
-    {lat, lon:lon+dLon, w:1},                 // Est
-    {lat, lon:lon-dLon, w:1},                 // Ovest
-  ];
-}
-
-function weightedAvg(values, weights) {
-  const totalW = weights.reduce((a,b)=>a+b, 0);
-  return values.reduce((sum, v, i) => sum + v * weights[i], 0) / totalW;
-}
-
-async function getMeteoMulti(lat, lon) {
-  const points = offsetPoints(lat, lon, 500);
-  const results = await Promise.allSettled(points.map(p => getMeteo(p.lat, p.lon)));
-  const valid = results.map((r,i) => r.status==="fulfilled" && r.value ? {...r.value, w:points[i].w} : null).filter(Boolean);
-  if(!valid.length) {
-    // Fallback: singolo punto centrale
-    try { return await getMeteo(lat, lon); } catch(e) { return null; }
-  }
-  const weights = valid.map(v=>v.w);
-  return {
-    temp:  Math.round(weightedAvg(valid.map(v=>v.temp),  weights)*10)/10,
-    um:    Math.round(weightedAvg(valid.map(v=>v.um),    weights)),
-    soilMoist: valid[0].soilMoist,
-    pioggia14: Math.round(weightedAvg(valid.map(v=>v.pioggia14||0), weights)*10)/10,
-    pioggia10: Math.round(weightedAvg(valid.map(v=>v.pioggia10||0), weights)*10)/10,
-    pioggia3:  Math.round(weightedAvg(valid.map(v=>v.pioggia3||0),  weights)*10)/10,
-    giorniSeccita: Math.round(weightedAvg(valid.map(v=>v.giorniSeccita||0), weights)),
-    giorni7: valid[0].giorni7 || [],
-    pressione: valid[0].pressione || null,
-    tendenzaPressione: valid[0].tendenzaPressione || null,
-    tSuolo: valid[0].tSuolo!=null ? Math.round(weightedAvg(valid.filter(v=>v.tSuolo!=null).map(v=>v.tSuolo), valid.filter(v=>v.tSuolo!=null).map(v=>v.w))*10)/10 : null,
-    vento: valid[0].vento!=null ? Math.round(weightedAvg(valid.filter(v=>v.vento!=null).map(v=>v.vento), valid.filter(v=>v.vento!=null).map(v=>v.w))) : null,
-    nuvolosita: valid[0].nuvolosita!=null ? Math.round(weightedAvg(valid.filter(v=>v.nuvolosita!=null).map(v=>v.nuvolosita), valid.filter(v=>v.nuvolosita!=null).map(v=>v.w))) : null,
-    escursione: valid[0].escursione,
-    tMax: valid[0].tMax,
-    tMin: valid[0].tMin,
-  };
-}
-
-async function getSoilMulti(lat, lon) {
-  const points = offsetPoints(lat, lon, 500);
-  const results = await Promise.allSettled(points.map(p =>
-    Promise.race([getSoil(p.lat, p.lon), new Promise(r=>setTimeout(()=>r(null),6000))])
-  ));
-  const valid = results.map((r,i) => r.status==="fulfilled" && r.value ? {...r.value, w:points[i].w} : null).filter(Boolean);
-  if(!valid.length) return null;
-  const weights = valid.map(v=>v.w);
-  // pH: media pesata
-  const phVals = valid.filter(v=>v.ph!=null);
-  const ph = phVals.length ? Math.round(weightedAvg(phVals.map(v=>v.ph), phVals.map(v=>v.w))*10)/10 : null;
-  // org: media pesata
-  const orgVals = valid.filter(v=>v.org!=null);
-  const org = orgVals.length ? Math.round(weightedAvg(orgVals.map(v=>v.org), orgVals.map(v=>v.w))*10)/10 : null;
-  // tipo: moda (il più frequente, pesato)
-  const tipoCount = {};
-  valid.forEach(v=>{ if(v.tipo) tipoCount[v.tipo] = (tipoCount[v.tipo]||0)+v.w; });
-  const tipo = Object.keys(tipoCount).length ? Object.keys(tipoCount).reduce((a,b)=>tipoCount[a]>tipoCount[b]?a:b) : null;
-  return { ph, org, tipo, source: "OpenLandMap ×5 (500m)" };
-}
-
-async function getElevationMulti(lat, lon) {
-  const points = offsetPoints(lat, lon, 500);
-  const results = await Promise.allSettled(points.map(p =>
-    Promise.race([getElevation(p.lat, p.lon), new Promise(r=>setTimeout(()=>r(null),5000))])
-  ));
-  const valid = results.map((r,i) => r.status==="fulfilled" && r.value!=null ? {v:r.value, w:points[i].w} : null).filter(Boolean);
-  if(!valid.length) return null;
-  return Math.round(weightedAvg(valid.map(v=>v.v), valid.map(v=>v.w)));
-}
-
-async function getElevation(lat,lon) {
-  // Cascata di fonti, dalla più precisa alla meno precisa per l'Italia
-  const sources = [
-    // 1. EU-DEM 25m — dataset Copernicus specifico per Europa, il più preciso
-    `https://api.opentopodata.org/v1/eudem25m?locations=${lat},${lon}`,
-    // 2. SRTM 30m — buona copertura globale
-    `https://api.opentopodata.org/v1/srtm30m?locations=${lat},${lon}`,
-    // 3. Open-Elevation (SRTM)
-    `https://api.open-elevation.com/api/v1/lookup?locations=${lat},${lon}`,
-    // 4. Open-Meteo DEM (griglia 1km, meno preciso ma sempre disponibile)
-    `https://api.open-meteo.com/v1/elevation?latitude=${lat}&longitude=${lon}`,
-  ];
-
-  for(const url of sources) {
-    try {
-      const r = await fetch(url, {signal: AbortSignal.timeout(5000)});
-      if(!r.ok) continue;
-      const d = await r.json();
-      let elev = null;
-      // opentopodata e open-elevation: d.results[0].elevation
-      if(d?.results?.[0]?.elevation != null) elev = d.results[0].elevation;
-      // open-meteo: d.elevation (array o numero)
-      else if(d?.elevation != null) elev = Array.isArray(d.elevation) ? d.elevation[0] : d.elevation;
-      if(elev != null && elev > -500 && elev < 9000) return Math.round(elev);
-    } catch(e) { continue; }
-  }
-  return null;
-}
-
-
-async function getMeteo(lat,lon) {
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`
-    + `&current=temperature_2m,relative_humidity_2m,soil_moisture_0_to_1cm,surface_pressure`
-    + `&current=soil_temperature_0cm,wind_speed_10m,cloud_cover`
-    + `&hourly=surface_pressure,temperature_2m`
-    + `&daily=precipitation_sum,temperature_2m_max,temperature_2m_min,relative_humidity_2m_max`
-    + `&past_days=14&forecast_days=1`
-    + `&timezone=auto`;
-  const r=await fetch(url);
-  const d=await r.json();
-  const precip = d.daily?.precipitation_sum || [];
-  const tempMax = d.daily?.temperature_2m_max || [];
-  const tempMin = d.daily?.temperature_2m_min || [];
-  const umMax   = d.daily?.relative_humidity_2m_max || [];
-  const dates   = d.daily?.time || [];
-  // Somma precipitazioni su finestre diverse
-  const pioggia14 = precip.reduce((a,v)=>a+(v||0),0);          // ultimi 14gg
-  const pioggia10 = precip.slice(-10).reduce((a,v)=>a+(v||0),0); // ultimi 10gg
-  const pioggia3  = precip.slice(-3).reduce((a,v)=>a+(v||0),0);  // ultimi 3gg
-  let giorniSeccita = 0;
-  for(let i=precip.length-1;i>=0;i--){ if((precip[i]||0)<1) giorniSeccita++; else break; }
-  // Ultimi 7 giorni per il grafico (escludiamo oggi parziale)
-  // Prendi gli ultimi 7 giorni completi (escludi oggi che è parziale)
-  const nDays = dates.length;
-  const startIdx = Math.max(0, nDays - 8); // 7 giorni + escludi oggi
-  const endIdx = nDays - 1;
-  const giorni7 = dates.slice(startIdx, endIdx).map((date, i) => {
-    const idx = startIdx + i;
-    return {
-      date,
-      pioggia: Math.round((precip[idx]||0)*10)/10,
-      tMax: tempMax[idx]!=null ? Math.round(tempMax[idx]*10)/10 : null,
-      tMin: tempMin[idx]!=null ? Math.round(tempMin[idx]*10)/10 : null,
-      um: umMax[idx]!=null ? Math.round(umMax[idx]) : null,
-    };
-  });
-  // Tendenza pressione: confronta media ultime 3h con media 3-6h fa
-  const pressureHourly = d.hourly?.surface_pressure || [];
-  const nH = pressureHourly.length;
-  const pressNow = nH>=3 ? pressureHourly.slice(-3).reduce((a,v)=>a+(v||0),0)/3 : null;
-  const pressPrev = nH>=6 ? pressureHourly.slice(-6,-3).reduce((a,v)=>a+(v||0),0)/3 : null;
-  const pressione = d.current?.surface_pressure ?? pressNow;
-  let tendenzaPressione = null; // "salita", "stabile", "discesa"
-  if(pressNow!=null && pressPrev!=null) {
-    const delta = pressNow - pressPrev;
-    if(delta > 1.5) tendenzaPressione = "salita";
-    else if(delta < -1.5) tendenzaPressione = "discesa";
-    else tendenzaPressione = "stabile";
-  }
-  const tMax0 = d.daily?.temperature_2m_max?.[d.daily.temperature_2m_max.length-1];
-  const tMin0 = d.daily?.temperature_2m_min?.[d.daily.temperature_2m_min.length-1];
-  const escursione = (tMax0!=null && tMin0!=null) ? Math.round((tMax0-tMin0)*10)/10 : null;
-  // Calcola T media notturna (22-06) e diurna (06-22) sulle ultime 24h
-  const tempHourly = d.hourly?.temperature_2m || [];
-  const nH2 = tempHourly.length;
-  let tNotte = null, tGiorno = null;
-  if(nH2 >= 24) {
-    // Ultime 24h: indici nH2-24 ... nH2-1
-    // Ore notturne: 22,23,0,1,2,3,4,5,6 → in finestra 24h = ore 22-23 del giorno prima + 0-6 di oggi
-    const notteOre = [22,23,0,1,2,3,4,5,6]; // indici ora del giorno
-    const giornoOre = [7,8,9,10,11,12,13,14,15,16,17,18,19,20,21]; // 07-21
-    const notteVals = [], giornoVals = [];
-    for(let i = nH2-24; i < nH2; i++) {
-      const ora = i % 24;
-      if(notteOre.includes(ora) && tempHourly[i] != null) notteVals.push(tempHourly[i]);
-      if(giornoOre.includes(ora) && tempHourly[i] != null) giornoVals.push(tempHourly[i]);
-    }
-    if(notteVals.length) tNotte = Math.round(notteVals.reduce((a,b)=>a+b,0)/notteVals.length*10)/10;
-    if(giornoVals.length) tGiorno = Math.round(giornoVals.reduce((a,b)=>a+b,0)/giornoVals.length*10)/10;
-  }
-  // Temperatura pesata: 60% notte + 40% giorno (se disponibili)
-  const tPesata = (tNotte!=null && tGiorno!=null)
-    ? Math.round((tNotte*0.6 + tGiorno*0.4)*10)/10
-    : null;
-
-  return {
-    temp: Math.round(d.current.temperature_2m*10)/10,
-    um: d.current.relative_humidity_2m,
-    soilMoist: d.current.soil_moisture_0_to_1cm!=null ? Math.round(d.current.soil_moisture_0_to_1cm*100) : null,
-    pioggia14: Math.round(pioggia14*10)/10,
-    pioggia10: Math.round(pioggia10*10)/10,
-    pioggia3:  Math.round(pioggia3*10)/10,
-    giorniSeccita,
-    giorni7,
-    pressione: pressione!=null ? Math.round(pressione*10)/10 : null,
-    tendenzaPressione,
-    tSuolo: d.current?.soil_temperature_0cm!=null ? Math.round(d.current.soil_temperature_0cm*10)/10 : null,
-    vento: d.current?.wind_speed_10m!=null ? Math.round(d.current.wind_speed_10m) : null,
-    nuvolosita: d.current?.cloud_cover!=null ? Math.round(d.current.cloud_cover) : null,
-    escursione,
-    tMax: tMax0!=null ? Math.round(tMax0*10)/10 : null,
-    tMin: tMin0!=null ? Math.round(tMin0*10)/10 : null,
-    tNotte,
-    tGiorno,
-    tPesata,
-  };
-}
-
-async function getSoil(lat,lon) {
-  try {
-    // OpenLandMap: pH, carbonio organico, sabbia/argilla — molto più veloce di SoilGrids
-    const base = "https://api.openlandmap.org/query/point";
-    const params = `lat=${lat}&lon=${lon}&properties=sol_ph.h2o_usda.4c1a2a_m,sol_organic.carbon_usda.6a1c_m,sol_texture.class_usda.tt_m&depth=0-10cm&stats=mean`;
-    const ctrl = new AbortController();
-    const tid = setTimeout(()=>ctrl.abort(), 6000);
-    const r = await fetch(`${base}?${params}`, {signal: ctrl.signal});
-    clearTimeout(tid);
-    if(!r.ok) throw new Error("OpenLandMap HTTP "+r.status);
-    const d = await r.json();
-    const props = d?.properties;
-    if(!props) throw new Error("no props");
-
-    // pH: valore diretto (es. 6.2)
-    const phRaw = props["sol_ph.h2o_usda.4c1a2a_m"]?.["0-10cm"]?.mean;
-    const ph = phRaw!=null ? Math.round(phRaw*10)/10 : null;
-
-    // Carbonio organico in g/kg → % sostanza organica (×1.72 per humus)
-    const socRaw = props["sol_organic.carbon_usda.6a1c_m"]?.["0-10cm"]?.mean;
-    const org = socRaw!=null ? Math.round(socRaw/10*1.72*10)/10 : null;
-
-    // Texture class: sandy, loamy, clay, silty, etc.
-    const texRaw = props["sol_texture.class_usda.tt_m"]?.["0-10cm"]?.mean;
-    let tipo = null;
-    if(texRaw!=null){
-      const t = Math.round(texRaw);
-      // USDA texture classes 1-12
-      if(t<=3) tipo="sabbioso";
-      else if(t<=5) tipo="franco";
-      else if(t<=8) tipo="limoso";
-      else if(t<=10) tipo="argilloso";
-      else tipo="franco";
-    }
-
-    return { ph: null, org, tipo, source:"OpenLandMap" }; // pH da vegetazione
-  } catch(e) {
-    // Secondo fallback: stima euristica da quota e vegetazione
-    return estimateSoilFromContext(lat, lon);
-  }
-}
-
-function estimateSoilFromContext(lat, lon) {
-  // Stima statistica per l'Italia centrale basata su coordinate
-  const quota = state.quota || 400;
-  const veg = state.vegSel || new Set();
-  let ph = 6.0, tipo = "franco", org = 3.0;
-  if(quota > 1200) { ph = 5.2; tipo = "limoso"; org = 4.5; }
-  else if(quota > 600) { ph = 5.8; tipo = "franco"; org = 3.5; }
-  else { ph = 6.5; tipo = "franco"; org = 2.5; }
-  if(veg.has("abeti")||veg.has("faggi")) { ph -= 0.5; org += 1.0; }
-  if(veg.has("calcareo")||veg.has("prati")) { ph += 0.5; tipo = "calcareo"; }
-  return { ph: null, org: Math.round(org*10)/10, tipo, source:"Stima locale" }; // pH da vegetazione
-}
-
-async function reverseGeocode(lat,lon) {
-  try {
-    const ctrl = new AbortController();
-    const tid = setTimeout(()=>ctrl.abort(), 5000);
-    // zoom=18 = massima precisione (strada/edificio)
-    const r = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&zoom=18&addressdetails=1`,
-      {signal: ctrl.signal}
-    );
-    clearTimeout(tid);
-    const d = await r.json();
-    const a = d.address;
-
-    // Cerca prima nome del bosco/parco/area naturale nel display_name di OSM
-    // Nominatim mette il nome del POI più vicino come primo elemento del display_name
-    const displayParts = (d.display_name||"").split(", ");
-    const firstPart = displayParts[0]||"";
-
-    // Parole chiave che indicano un'area naturale rilevante per i funghi
-    const keywords = ["bosco","foresta","pineta","parco","riserva","oasi","macchia","selva","faggeta","castagneto","querceto","naturalista","monte","colle","lago","valle","area"];
-    const isNatural = keywords.some(k => firstPart.toLowerCase().includes(k));
-    const nomeNaturale = isNatural ? firstPart : null;
-
-    // Gerarchia per nome del luogo abitato
-    const frazione = a.suburb||a.quarter||a.hamlet||a.village;
-    const comune = a.city||a.town||a.municipality;
-    const localita = frazione||(comune||a.county||a.state||"zona");
-
-    // Combina: se c'è un bosco noto, mostralo con il comune
-    if(nomeNaturale && comune) return nomeNaturale+" - "+comune;
-    if(nomeNaturale) return nomeNaturale;
-    if(frazione && comune && frazione !== comune) return frazione+" ("+comune+")";
-    return localita;
-  } catch(e) { return "zona"; }
-}
-
-async function callClaude(prompt, useWebSearch=false) {
-  const key = getApiKey();
-  if(!key) throw new Error("No API key");
-  const body = {
-    model: CLAUDE_MODEL,
-    max_tokens: 1000,
-    messages: [{role:"user", content:prompt}]
-  };
-  if(useWebSearch) body.tools = [{type:"web_search_20250305",name:"web_search"}];
-  const r=await fetch("https://api.anthropic.com/v1/messages",{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json",
-      "x-api-key": key,
-      "anthropic-version": "2023-06-01",
-      "anthropic-dangerous-direct-browser-access": "true"
-    },
-    body: JSON.stringify(body)
-  });
-  if(!r.ok) {
-    const err = await r.json().catch(()=>({}));
-    throw new Error(err?.error?.message || `HTTP ${r.status}`);
-  }
-  const data = await r.json();
-  // Registra uso crediti
-  const usage = data.usage || {};
-  registraChiamata("AI", usage.input_tokens||0, usage.output_tokens||0);
-  return data;
-}
 
 // ─── RENDER ──────────────────────────────────────────────────────────────────
 function setStatus(msg, show=true, id="status") {
@@ -1968,15 +1658,6 @@ function renderExtra(extra) {
   const el = document.getElementById("extra-display");
   if(!el || !extra) return;
   const items = [];
-  // Temperature notturna e diurna (più importanti della corrente)
-  if(state.piogge?.tNotte!=null) {
-    const ok = state.piogge.tNotte>=6&&state.piogge.tNotte<=14;
-    items.push({l:"T° notte (22-6)", v:state.piogge.tNotte+"°C", ok});
-  }
-  if(state.piogge?.tGiorno!=null) {
-    const ok = state.piogge.tGiorno>=10&&state.piogge.tGiorno<=22;
-    items.push({l:"T° giorno (6-22)", v:state.piogge.tGiorno+"°C", ok});
-  }
   if(extra.tSuolo!=null) {
     const ok = extra.tSuolo>=8&&extra.tSuolo<=18;
     items.push({l:"T° suolo", v:extra.tSuolo+"°C", ok});
@@ -1992,6 +1673,17 @@ function renderExtra(extra) {
   if(extra.vento!=null) {
     const ok = extra.vento<=20;
     items.push({l:"Vento", v:extra.vento+"km/h", ok});
+  }
+  // Fase nascita funghi
+  if(state.piogge?.faseNascita) {
+    const fLbl={troppo_recente:"Troppo recente ⏳",fase_attesa:"In attesa 🕐",fase_ottimale:"Fase ottimale ✓",fase_tardiva:"Fase tardiva ~",troppo_secco:"Troppo secco ✗"};
+    const fOk={fase_ottimale:true,fase_tardiva:null,troppo_recente:false,fase_attesa:null,troppo_secco:false};
+    const f=state.piogge.faseNascita;
+    items.push({l:"Fase nascita",v:fLbl[f]||f,ok:fOk[f]??null});
+  }
+  if(state.piogge?.qualitaPioggia&&state.piogge.qualitaPioggia!=="assente") {
+    const qOk=state.piogge.qualitaPioggia==="notturna"||state.piogge.qualitaPioggia==="mattutina";
+    items.push({l:"Tipo pioggia",v:state.piogge.qualitaPioggia,ok:qOk});
   }
   if(!items.length) { el.style.display="none"; return; }
   el.style.display="grid";
@@ -2351,7 +2043,7 @@ async function analyzeCoords() {
   const meteoVal = (meteoRes.status==="fulfilled" && meteoRes.value) ? meteoRes.value : null;
   if(meteoVal) {
     temp=meteoVal.temp||15; um=meteoVal.um||65; soilMoist=meteoVal.soilMoist||null;
-    state.piogge={pioggia14:meteoVal.pioggia14||0,pioggia10:meteoVal.pioggia10||0,pioggia3:meteoVal.pioggia3||0,giorniSeccita:meteoVal.giorniSeccita||0,pressione:{valore:meteoVal.pressione,tendenza:meteoVal.tendenzaPressione},tNotte:meteoVal.tNotte,tGiorno:meteoVal.tGiorno,tPesata:meteoVal.tPesata};
+    state.piogge={pioggia14:meteoVal.pioggia14||0,pioggia10:meteoVal.pioggia10||0,pioggia3:meteoVal.pioggia3||0,giorniSeccita:meteoVal.giorniSeccita||0,pressione:{valore:meteoVal.pressione,tendenza:meteoVal.tendenzaPressione}};
     state.pressione={valore:meteoVal.pressione,tendenza:meteoVal.tendenzaPressione};
     state.extra={tSuolo:meteoVal.tSuolo,vento:meteoVal.vento,nuvolosita:meteoVal.nuvolosita,escursione:meteoVal.escursione,tMax:meteoVal.tMax,tMin:meteoVal.tMin};
     state.giorni7=meteoVal.giorni7||[];
