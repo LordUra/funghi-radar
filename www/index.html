@@ -1787,7 +1787,14 @@ async function verificaFav(id) {
       fav.quota = elevRes.value;
     }
     const soil = s||{ph:null,tipo:null};
-    const piogge = {pioggia10:m.pioggia10, pioggia3:m.pioggia3, giorniSeccita:m.giorniSeccita??0};
+    const piogge = {
+      pioggia14:m.pioggia14||0, pioggia10:m.pioggia10||0,
+      pioggia3:m.pioggia3||0, giorniSeccita:m.giorniSeccita??0,
+      pressione:{valore:m.pressione,tendenza:m.tendenzaPressione},
+      tNotte:m.tNotte??null, tGiorno:m.tGiorno??null, tPesata:m.tPesata??null,
+      faseNascita:m.faseNascita??null, qualitaPioggia:m.qualitaPioggia??null,
+      mmUltimi24h:m.mmUltimi24h||0,
+    };
     // Calcola specie prima, poi globalScore tiene conto della stagione
     const vegSet = new Set(fav.veg||[]);
     const month = new Date().getMonth();
