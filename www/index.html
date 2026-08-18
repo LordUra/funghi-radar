@@ -969,14 +969,15 @@ function globalScore(t,u,q,soil,piogge={},spList) {
   if(u>=70&&u<=90)s+=25; else if(u>=60)s+=12;
   if(q>=400&&q<=1400)s+=20; else if(q>=200)s+=10;
   if(soil.ph!=null&&soil.ph>=4.5&&soil.ph<=7)s+=10;
-  // Piogge: 40-100mm in 7-14gg + 3-5gg asciutti dopo = condizione ideale
-  const p10=piogge.pioggia14||piogge.pioggia10||0, gsec=piogge.giorniSeccita??0;
-  if(p10>=40&&p10<=100&&gsec>=3&&gsec<=10) s+=15;
-  else if(p10>=25&&p10<=120&&gsec>=2&&gsec<=14) s+=9;
-  else if(p10>=15&&gsec>=1) s+=4;
-  else if(p10>=5) s=Math.min(s,35);
-  else s=Math.min(s,20);
-  if(p10>120) s=Math.max(0,s-8);
+  // Piogge: fase nascita
+  const fase2=piogge?.faseNascita||"sconosciuta", p14g=piogge?.pioggia14||0;
+  if(fase2==="fase_ottimale"&&p14g>=30) s+=15;
+  else if(fase2==="fase_tardiva"&&p14g>=20) s+=9;
+  else if(fase2==="fase_attesa"&&p14g>=20) s+=6;
+  else if(fase2==="troppo_recente") s=Math.min(s,30);
+  else if(fase2==="troppo_secco"||p14g<10) s=Math.min(s,20);
+  else s+=4;
+  if(p14g>120) s=Math.max(0,s-8);
   // Pressione
   const pres = piogge.pressione||{};
   if(pres.tendenza==="discesa") s=Math.min(100,s+8);
@@ -1088,16 +1089,16 @@ function calcSpecie(t,u,q,soil,veg,month,piogge={}) {
     } else {
       score = 0; // fuori stagione effettiva
     }
-    // Piogge: 40-100mm in 14gg + 3-10gg asciutti = ideale. <5mm = siccità (cap score)
+    // Piogge: fase nascita precisa
     max+=18;
-    const p10=piogge.pioggia14||piogge.pioggia10||0, p3=piogge.pioggia3||0, gsec=piogge.giorniSeccita??0;
-    if(p10>=40&&p10<=100&&gsec>=3&&gsec<=10) score+=18;          // ideale
-    else if(p10>=25&&p10<=120&&gsec>=2&&gsec<=14) score+=11;     // buona
-    else if(p10>=15&&gsec>=1) score+=5;                           // discreta
-    else if(p10>=5) score=Math.min(score,Math.round(max*0.35));   // secco: cap 35%
-    else score=Math.min(score,Math.round(max*0.15));               // siccità: cap 15%
-    if(p10>120) score=Math.max(0,score-10);                       // eccesso idrico
-    if(gsec>14) score=Math.max(0,score-8);                        // troppo tempo fa
+    const p14=piogge.pioggia14||0, fase=piogge.faseNascita||"sconosciuta", mm24=piogge.mmUltimi24h||0;
+    if(fase==="fase_ottimale"&&p14>=30) score+=18;
+    else if(fase==="fase_tardiva"&&p14>=20) score+=10;
+    else if(fase==="fase_attesa"&&p14>=20) score+=6;
+    else if(fase==="troppo_recente"){score=Math.min(score,Math.round(max*0.25));if(mm24>10)score=Math.min(score,Math.round(max*0.15));}
+    else if(fase==="troppo_secco"||p14<10) score=Math.min(score,Math.round(max*0.15));
+    else score+=5;
+    if(p14>120) score=Math.max(0,score-10);
     // Costruisci spiegazione fattori
     const fattori = [];
     if(t>=c.tempMin&&t<=c.tempMax) fattori.push({ok:true,txt:"temp "+t+"°C"});
@@ -1117,21 +1118,10 @@ function calcSpecie(t,u,q,soil,veg,month,piogge={}) {
     }
     if(inStagione) fattori.push({ok:true,txt:"stagione ottimale"});
     else if(bordoStagione) fattori.push({ok:null,txt:"bordo stagione"});
-    if(p10!=null){
-      if(p10>=40&&p10<=100&&gsec>=3&&gsec<=10)
-        fattori.push({ok:true, txt:"piogge ideali ("+p10+"mm/14gg, "+gsec+"gg asciutti)"});
-      else if(p10>=25&&gsec>=2&&gsec<=14)
-        fattori.push({ok:true, txt:"piogge sufficienti ("+p10+"mm, "+gsec+"gg fa)"});
-      else if(p10<15)
-        fattori.push({ok:false, txt:"troppo secco ("+p10+"mm, servono 40-100mm)"});
-      else if(p10>120)
-        fattori.push({ok:false, txt:"piogge eccessive ("+p10+"mm)"});
-      else if(gsec>14)
-        fattori.push({ok:false, txt:"piogge troppo lontane ("+gsec+"gg fa)"});
-      else if(gsec<3)
-        fattori.push({ok:null, txt:"ancora bagnato ("+gsec+"gg asciutti, servono 3-5)"});
-      else
-        fattori.push({ok:null, txt:"piogge "+p10+"mm ("+gsec+"gg fa)"});
+    if(fase&&fase!=="sconosciuta"){
+      const fL={troppo_recente:"pioggia recente — terreno saturo",fase_attesa:"in attesa (1-2gg fa)",fase_ottimale:"fase ottimale ✓ ("+p14+"mm/14gg)",fase_tardiva:"fase tardiva ("+p14+"mm/14gg)",troppo_secco:"troppo secco ("+p14+"mm/14gg)"};
+      const fO={fase_ottimale:true,fase_tardiva:null,troppo_recente:false,fase_attesa:null,troppo_secco:false};
+      fattori.push({ok:fO[fase]??null, txt:fL[fase]||fase});
     }
     return {...sp, pct:Math.min(99,Math.round((score/max)*100)), fattori};;
   }).sort((a,b)=>b.pct-a.pct);
@@ -1226,6 +1216,9 @@ async function getMeteoMulti(lat, lon) {
     tNotte: valid[0].tNotte??null,
     tGiorno: valid[0].tGiorno??null,
     tPesata: valid[0].tPesata??null,
+    faseNascita: valid[0].faseNascita??null,
+    qualitaPioggia: valid[0].qualitaPioggia??null,
+    mmUltimi24h: valid[0].mmUltimi24h??0,
   };
 }
 
@@ -1294,7 +1287,7 @@ async function getMeteo(lat,lon) {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`
     + `&current=temperature_2m,relative_humidity_2m,soil_moisture_0_to_1cm,surface_pressure`
     + `&current=soil_temperature_0cm,wind_speed_10m,cloud_cover`
-    + `&hourly=surface_pressure,temperature_2m`
+    + `&hourly=surface_pressure,temperature_2m,precipitation`
     + `&daily=precipitation_sum,temperature_2m_max,temperature_2m_min,relative_humidity_2m_max`
     + `&past_days=14&forecast_days=1`
     + `&timezone=auto`;
@@ -1342,6 +1335,16 @@ async function getMeteo(lat,lon) {
   const tMax0 = d.daily?.temperature_2m_max?.[d.daily.temperature_2m_max.length-1];
   const tMin0 = d.daily?.temperature_2m_min?.[d.daily.temperature_2m_min.length-1];
   const escursione = (tMax0!=null && tMin0!=null) ? Math.round((tMax0-tMin0)*10)/10 : null;
+  // Analisi piogge orarie
+  const pH=d.hourly?.precipitation||[], p24=pH.slice(-24);
+  const mmN=p24.filter((_,i)=>{const o=i%24;return o>=22||o<=6;}).reduce((a,v)=>a+(v||0),0);
+  const mmP=p24.filter((_,i)=>{const o=i%24;return o>=12&&o<=18;}).reduce((a,v)=>a+(v||0),0);
+  const mmM=p24.filter((_,i)=>{const o=i%24;return o>=6&&o<12;}).reduce((a,v)=>a+(v||0),0);
+  const mmU24=p24.reduce((a,v)=>a+(v||0),0);
+  let ore=0; for(let i=pH.length-1;i>=0;i--){if((pH[i]||0)>=0.5)break;ore++;}
+  const qualitaPioggia=mmN>mmP?"notturna":mmM>mmP?"mattutina":mmP>1?"pomeridiana":"assente";
+  const faseNascita=ore<24?"troppo_recente":ore<48?"fase_attesa":ore<120?"fase_ottimale":ore<240?"fase_tardiva":"troppo_secco";
+
   // T° notturna (22-06) peso 60%, diurna (06-22) peso 40%
   const tempH=d.hourly?.temperature_2m||[], nH2=tempH.length;
   let tNotte=null, tGiorno=null;
@@ -1376,6 +1379,7 @@ async function getMeteo(lat,lon) {
     tMax: tMax0!=null ? Math.round(tMax0*10)/10 : null,
     tMin: tMin0!=null ? Math.round(tMin0*10)/10 : null,
     tNotte, tGiorno, tPesata,
+    faseNascita, qualitaPioggia, mmUltimi24h:mmU24,
   };
 }
 
@@ -1518,6 +1522,9 @@ async function getMeteoMulti(lat, lon) {
     tNotte: valid[0].tNotte??null,
     tGiorno: valid[0].tGiorno??null,
     tPesata: valid[0].tPesata??null,
+    faseNascita: valid[0].faseNascita??null,
+    qualitaPioggia: valid[0].qualitaPioggia??null,
+    mmUltimi24h: valid[0].mmUltimi24h??0,
   };
 }
 
@@ -1586,7 +1593,7 @@ async function getMeteo(lat,lon) {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`
     + `&current=temperature_2m,relative_humidity_2m,soil_moisture_0_to_1cm,surface_pressure`
     + `&current=soil_temperature_0cm,wind_speed_10m,cloud_cover`
-    + `&hourly=surface_pressure,temperature_2m`
+    + `&hourly=surface_pressure,temperature_2m,precipitation`
     + `&daily=precipitation_sum,temperature_2m_max,temperature_2m_min,relative_humidity_2m_max`
     + `&past_days=14&forecast_days=1`
     + `&timezone=auto`;
@@ -1634,6 +1641,16 @@ async function getMeteo(lat,lon) {
   const tMax0 = d.daily?.temperature_2m_max?.[d.daily.temperature_2m_max.length-1];
   const tMin0 = d.daily?.temperature_2m_min?.[d.daily.temperature_2m_min.length-1];
   const escursione = (tMax0!=null && tMin0!=null) ? Math.round((tMax0-tMin0)*10)/10 : null;
+  // Analisi piogge orarie
+  const pH=d.hourly?.precipitation||[], p24=pH.slice(-24);
+  const mmN=p24.filter((_,i)=>{const o=i%24;return o>=22||o<=6;}).reduce((a,v)=>a+(v||0),0);
+  const mmP=p24.filter((_,i)=>{const o=i%24;return o>=12&&o<=18;}).reduce((a,v)=>a+(v||0),0);
+  const mmM=p24.filter((_,i)=>{const o=i%24;return o>=6&&o<12;}).reduce((a,v)=>a+(v||0),0);
+  const mmU24=p24.reduce((a,v)=>a+(v||0),0);
+  let ore=0; for(let i=pH.length-1;i>=0;i--){if((pH[i]||0)>=0.5)break;ore++;}
+  const qualitaPioggia=mmN>mmP?"notturna":mmM>mmP?"mattutina":mmP>1?"pomeridiana":"assente";
+  const faseNascita=ore<24?"troppo_recente":ore<48?"fase_attesa":ore<120?"fase_ottimale":ore<240?"fase_tardiva":"troppo_secco";
+
   // T° notturna (22-06) peso 60%, diurna (06-22) peso 40%
   const tempH=d.hourly?.temperature_2m||[], nH2=tempH.length;
   let tNotte=null, tGiorno=null;
@@ -1668,6 +1685,7 @@ async function getMeteo(lat,lon) {
     tMax: tMax0!=null ? Math.round(tMax0*10)/10 : null,
     tMin: tMin0!=null ? Math.round(tMin0*10)/10 : null,
     tNotte, tGiorno, tPesata,
+    faseNascita, qualitaPioggia, mmUltimi24h:mmU24,
   };
 }
 
@@ -1846,6 +1864,8 @@ async function verificaFav(id) {
       pioggia3:m.pioggia3||0, giorniSeccita:m.giorniSeccita??0,
       pressione:{valore:m.pressione??null,tendenza:m.tendenzaPressione??null},
       tNotte:m.tNotte??null, tGiorno:m.tGiorno??null, tPesata:m.tPesata??null,
+      faseNascita:m.faseNascita??null, qualitaPioggia:m.qualitaPioggia??null,
+      mmUltimi24h:m.mmUltimi24h||0,
     };
     // Calcola specie prima, poi globalScore tiene conto della stagione
     const vegSet = new Set(fav.veg||[]);
@@ -2039,6 +2059,16 @@ function renderExtra(extra) {
   if(extra.vento!=null) {
     const ok = extra.vento<=20;
     items.push({l:"Vento", v:extra.vento+"km/h", ok});
+  }
+  if(state.piogge?.faseNascita) {
+    const fL={troppo_recente:"Troppo recente ⏳",fase_attesa:"In attesa 🕐",fase_ottimale:"Fase ottimale ✓",fase_tardiva:"Fase tardiva ~",troppo_secco:"Troppo secco ✗"};
+    const fO={fase_ottimale:true,fase_tardiva:null,troppo_recente:false,fase_attesa:null,troppo_secco:false};
+    const f=state.piogge.faseNascita;
+    items.push({l:"Fase nascita",v:fL[f]||f,ok:fO[f]??null});
+  }
+  if(state.piogge?.qualitaPioggia&&state.piogge.qualitaPioggia!=="assente") {
+    const qOk=state.piogge.qualitaPioggia==="notturna"||state.piogge.qualitaPioggia==="mattutina";
+    items.push({l:"Tipo pioggia",v:state.piogge.qualitaPioggia,ok:qOk});
   }
   if(!items.length) { el.style.display="none"; return; }
   el.style.display="grid";
@@ -2398,7 +2428,7 @@ async function analyzeCoords() {
   const meteoVal = (meteoRes.status==="fulfilled" && meteoRes.value) ? meteoRes.value : null;
   if(meteoVal) {
     temp=meteoVal.temp||15; um=meteoVal.um||65; soilMoist=meteoVal.soilMoist||null;
-    state.piogge={pioggia14:meteoVal.pioggia14||0,pioggia10:meteoVal.pioggia10||0,pioggia3:meteoVal.pioggia3||0,giorniSeccita:meteoVal.giorniSeccita||0,pressione:{valore:meteoVal.pressione,tendenza:meteoVal.tendenzaPressione},tNotte:meteoVal.tNotte??null,tGiorno:meteoVal.tGiorno??null,tPesata:meteoVal.tPesata??null};
+    state.piogge={pioggia14:meteoVal.pioggia14||0,pioggia10:meteoVal.pioggia10||0,pioggia3:meteoVal.pioggia3||0,giorniSeccita:meteoVal.giorniSeccita||0,pressione:{valore:meteoVal.pressione,tendenza:meteoVal.tendenzaPressione},tNotte:meteoVal.tNotte??null,tGiorno:meteoVal.tGiorno??null,tPesata:meteoVal.tPesata??null,faseNascita:meteoVal.faseNascita??null,qualitaPioggia:meteoVal.qualitaPioggia??null,mmUltimi24h:meteoVal.mmUltimi24h||0};
     state.pressione={valore:meteoVal.pressione,tendenza:meteoVal.tendenzaPressione};
     state.extra={tSuolo:meteoVal.tSuolo,vento:meteoVal.vento,nuvolosita:meteoVal.nuvolosita,escursione:meteoVal.escursione,tMax:meteoVal.tMax,tMin:meteoVal.tMin};
     state.giorni7=meteoVal.giorni7||[];
