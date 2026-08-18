@@ -271,6 +271,8 @@ body {
 </head>
 <body>
 
+
+
 <div class="header">
   <div class="header-top">
     <div class="logo"><span class="logo-icon">🍄</span> Funghi Radar<span class="header-sub" style="margin-left:8px">beta</span></div>
@@ -372,31 +374,7 @@ body {
         </div>
         <div class="specie-list" id="specie-list"></div>
       </div>
-
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <div class="card-title" style="margin:0">Analisi AI</div>
-          <div class="spinner" id="ai-spin" style="display:none;border-top-color:var(--green-light)"></div>
-        </div>
-        <div class="analisi-testo" id="analisi-testo"></div>
-      </div>
     </div>
-
-  <!-- ===== SEGNALAZIONI ===== -->
-  </div>
-
-  <div class="panel" id="panel-segnalazioni" style="padding-top:1.25rem">
-    <div class="row-btns">
-      <button class="btn btn-primary" id="btn-search" onclick="searchWeb(true)">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        Cerca segnalazioni ora
-      </button>
-    </div>
-    <div class="status-bar" id="status-segn"><div class="spinner"></div><span id="status-segn-msg">...</span></div>
-    <div id="segn-content">
-      <div class="empty-state" id="segn-empty">Rileva prima la posizione nel tab Radar,<br>oppure clicca "Cerca segnalazioni ora".</div>
-    </div>
-  </div>
 
   <!-- ===== TERRENO ===== -->
   </div>
@@ -497,6 +475,7 @@ body {
 
 <script>
 
+// ─── COSTANTI ────────────────────────────────────────────────────────────────
 
 
 const VEG_OPTIONS = [
@@ -558,7 +537,7 @@ const SPECIE_DB = [
    },
    areeEscluse:["litorale","pianura"],
    tags:["Estate-Autunno","pH acido","Faggete e quercete"],
-   desc:"Il più ricercato. Due biotipi principali: estatino (reticulatus) e autunnale (edulis). Il Boletus aereus predilige leccete e quercete mediterranee."},
+   desc:"Il più ricercato. Predilige abete rosso, faggio e castagno. Non cresce mai sotto il larice. Due biotipi: estatino (reticulatus) a quote basse e autunnale (edulis) nelle faggete. Il Boletus aereus è tipico delle leccete mediterranee."},
 
   // ─── GALLINACCIO ─────────────────────────────────────────────────────────
   {nome:"Gallinaccio",sci:"Cantharellus cibarius",icon:"🌼",
@@ -579,7 +558,7 @@ const SPECIE_DB = [
      pianura:     [5,6,7,8,9,10],
    },
    tags:["Estate-autunno","Boschi misti"],
-   desc:"Lunga stagione. In Sardegna e Sud Italia la stagione si sposta all'autunno-inverno per il clima mediterraneo."},
+   desc:"Dal livello del mare fino a 2000m, maggio-novembre. Simbionte legato all'acidità del suolo. Odore fruttato di albicocca con nota di vaniglia. Specie continentale prevalentemente, diffusa anche nelle latifoglie del Sud. Nessun viraggio al taglio."},
 
   // ─── OVULO BUONO ─────────────────────────────────────────────────────────
   {nome:"Ovulo",sci:"Amanita caesarea",icon:"🥚",
@@ -600,7 +579,7 @@ const SPECIE_DB = [
      pianura:     [5,6,7,8,9],
    },
    tags:["Caldo","Querce","Leccete","Specie termofila"],
-   desc:"Predilige leccete e quercete termofile. In Sardegna e Sud Italia frutifica anche in primavera precoce."},
+   desc:"Specie termofila per eccellenza — zone calde e secche, fino a 900m. Castagni e cerri principalmente. Unico fungo commestibile crudo. Facilmente riconoscibile nell'involucro bianco a uovo. Lamelle e gambo gialli. In Sardegna e Sud anche in primavera precoce."},
 
   // ─── BOLETO NERO / BRONZINO ──────────────────────────────────────────────
   {nome:"Porcino nero",sci:"Boletus aereus",icon:"🍄",
@@ -620,7 +599,7 @@ const SPECIE_DB = [
      pianura:     [6,7,8,9,10],
    },
    tags:["Leccete","Quercete","Mediterraneo","Estate-Autunno"],
-   desc:"Specie termofila delle leccete e quercete. Molto comune in Sardegna, Sicilia e versanti meridionali dell'Appennino."},
+   desc:"Il bronzino — cappello bruno-nero scuro. Specie termofila delle leccete e quercete mediterranee. Cresce nelle stesse condizioni dell'ovulo: caldo e secco. Molto comune in Sardegna, Sicilia e versanti meridionali dell'Appennino."},
 
   // ─── CHIODINO ────────────────────────────────────────────────────────────
   {nome:"Chiodino",sci:"Armillaria mellea",icon:"🍂",
@@ -641,7 +620,7 @@ const SPECIE_DB = [
      pianura:     [9,10,11,0],
    },
    tags:["Ceppi","Autunno-inverno","Ubiquitario"],
-   desc:"Parassita di ceppi. Stagione autunno-inverno, prolungata al sud. Diffuso in tutta Italia."},
+   desc:"Parassita lignicolo che fruttifica a ciuffi densissimi su ceppi, radici e tronchi. TOSSICO DA CRUDO — causa gravi intossicazioni gastrointestinali. Va consumato sempre ben cotto e dopo sbollentatura. Stagione autunno-inverno, prolungata al sud."},
 
   // ─── RUSSOLA ─────────────────────────────────────────────────────────────
   {nome:"Russola",sci:"Russula spp.",icon:"🔴",
@@ -662,7 +641,7 @@ const SPECIE_DB = [
      pianura:     [5,6,7,8,9,10],
    },
    tags:["Boschi vari","Ubiquitaria"],
-   desc:"Genere diffusissimo in tutta Italia. Attenzione: specie commestibili e velenose coesistono."},
+   desc:"Genere con oltre 150 specie in Italia. Le commestibili migliori: R. virescens (cappello verde), R. cyanoxantha (gambo viola-blu). Velenose: R. emetica (rossastra, caustica al sapore), R. subnigricans (mortale). Identificazione certa INDISPENSABILE."},
 
   // ─── PRATAIOLO ───────────────────────────────────────────────────────────
   {nome:"Prataiolo",sci:"Agaricus campestris",icon:"⚪",
@@ -682,7 +661,7 @@ const SPECIE_DB = [
      pianura:     [3,4,5,9,10,11],
    },
    tags:["Prati","Pascoli","Neutro-basico"],
-   desc:"Prati e pascoli. In Sardegna e Sicilia disponibile quasi tutto l'anno tranne l'estate secca."},
+   desc:"Prati e pascoli neutro-basici. Attenzione alla confusione con Agaricus xanthodermus (ingiallisce al taglio, odore di fenolo) e con Amanita phalloides bianca nei giovani esemplari. In Sardegna e Sicilia quasi tutto l'anno."},
 
   // ─── SPUGNOLA ────────────────────────────────────────────────────────────
   {nome:"Spugnola",sci:"Morchella spp.",icon:"🫧",
@@ -703,7 +682,7 @@ const SPECIE_DB = [
      pianura:     [2,3,4],
    },
    tags:["Primavera","Calcareo","150-1100m"],
-   desc:"Fungo primaverile. In Sardegna e Sud inizia già a gennaio. Suoli calcarei umidi vicino a corsi d'acqua."},
+   desc:"Fungo primaverile per eccellenza. Suoli calcarei umidi, vicino a corsi d'acqua, vecchi frutteti e terreni disturbati. In Sardegna e Sud inizia a gennaio. TOSSICA DA CRUDA — va sempre bollita o cotta a lungo, mai saltata velocemente."},
 
   // ─── MAZZA DI TAMBURO ────────────────────────────────────────────────────
   {nome:"Mazza di tamburo",sci:"Macrolepiota procera",icon:"🌂",
@@ -724,7 +703,7 @@ const SPECIE_DB = [
      pianura:     [5,6,7,8,9,10,11],
    },
    tags:["Radure","Ubiquitaria","Lunga stagione"],
-   desc:"Diffusa in tutta Italia. Stagione molto lunga al sud e in pianura."},
+   desc:"Grande e inconfondibile: anello mobile a doppio strato sul gambo, cappello fino a 40cm. Ottima impanata e fritta. Non raccogliere mai le Lepiota piccole — alcune sono mortalmente tossiche. Solo M. procera con cappello >15cm e anello mobile è sicura."},
 
   // ─── LATTARIO DELIZIOSO ──────────────────────────────────────────────────
   {nome:"Lattario delizioso",sci:"Lactarius deliciosus",icon:"🟠",
@@ -745,8 +724,8 @@ const SPECIE_DB = [
      pianura:     [6,7,8,9,10],
    },
    areeEscluse:["litorale","pianura"],
-   tags:["Pinete","Conifere","Acido"],
-   desc:"Strettamente legato a pini e abeti. In Sardegna presente nelle pinete costiere da settembre."},
+   tags:["Pinete","Conifere","Lattice arancio","Sanguinaccio"],
+   desc:"Strettamente micorrizico con pini e abeti. Lattice arancio-carota caratteristico (non virante). Distinto dal Sanguinello (L. sanguifluus) che ha lattice rosso-vinoso. In Sardegna nelle pinete costiere da settembre."},
 
   // ─── SANGUINELLO ─────────────────────────────────────────────────────────
   // Lactarius sanguifluus — tipico delle pinete costiere mediterranee
@@ -769,7 +748,7 @@ const SPECIE_DB = [
      alpi:        [8,9,10],
    },
    tags:["Pinete costiere","Autunno-inverno","Litorale","Lattice rosso-vinoso"],
-   desc:"Strettamente legato ai pini marittimi e domestici. Tipico delle pinete costiere del Lazio, Toscana, Liguria, Sardegna e Sicilia. Il lattice è rosso-vinoso, caratteristica distintiva dal Lattario delizioso."},
+   desc:"Strettamente legato ai pini marittimi e domestici delle pinete costiere. Lattice rosso-vinoso — carattere inconfondibile rispetto al lattice arancio del Lattario deliciosus. Cappello zonato arancio-rosso. Ottimo alla griglia e sott'olio."},
 
   // ─── TROMBETTA DEI MORTI ─────────────────────────────────────────────────
   {nome:"Trombetta dei morti",sci:"Craterellus cornucopioides",icon:"🖤",
@@ -791,7 +770,7 @@ const SPECIE_DB = [
    },
    areeEscluse:["litorale"],
    tags:["Humus ricco","Autunno","Appennino centro-settentrionale"],
-   desc:"Comune nell'Appennino centro-settentrionale e Alpi. In Sardegna e Sud presente in autunno-inverno."},
+   desc:"Difficile da vedere per il colore nero. Cresce in tappeti fitti nelle lettiere di faggio e quercia. Ottima essiccata e in polvere. Comune Appennino centro-settentrionale e Alpi, autunno."},
 
   // ─── CARDONCELLO ─────────────────────────────────────────────────────────
   // Specie tipica del Sud Italia e Puglia
@@ -814,7 +793,7 @@ const SPECIE_DB = [
    // Presente principalmente al Sud e isole
    areePresenza:["sud","sicilia","sardegna","appennino_cs"],
    tags:["Sud Italia","Prati aridi","Autunno-primavera","Tipico pugliese"],
-   desc:"Specie tipica del Sud Italia, Puglia, Basilicata, Sicilia e Sardegna. Cresce nei prati aridi vicino a ferula e cardi. Raro al Centro-Nord."},
+   desc:"La specie fungina più coltivata in Italia. Nel Mezzogiorno cresce selvatico nei prati aridi argillosi vicino a ferula, cardi e finocchio selvatico. Puglia e Basilicata i principali areali. Sapore intenso e aromatico, ottimo alla griglia."},
 
   // ─── PIOPPARELLO ─────────────────────────────────────────────────────────
   {nome:"Piopparello",sci:"Cyclocybe aegerita",icon:"🌿",
@@ -834,7 +813,117 @@ const SPECIE_DB = [
      pianura:     [3,4,5,9,10,11],
    },
    tags:["Pioppi","Primavera-Autunno","Ceppi"],
-   desc:"Cresce su ceppi di pioppo e altri latifoglie. Comune in tutta Italia lungo fiumi e canali."},
+   desc:"Cresce a ciuffi su ceppi vivi e morenti di pioppo, salice, gelso e platano. Molto coltivato artificialmente su ceppi inoculati. Sapore delicato. Comune lungo fiumi, canali e filari. Raccoglierlo giovane, prima che il cappello si apra troppo."},
+
+  // ─── GALLETTO ────────────────────────────────────────────────────────────
+  {nome:"Galletto",sci:"Cantharellus lutescens",icon:"🌻",
+   cond:{tempMin:8,tempMax:20,umMin:65,umMax:92,phMin:4.0,phMax:6.0,quotaMin:200,quotaMax:1600,org:3},
+   veg:["faggi","abeti","misto"],tipo:["franco","limoso","torboso"],
+   tipoEscluso:["sabbioso","calcareo"],vegEsclusa:["macchia","prati"],
+   stagioni:{default:[8,9,10,11],bassa:[8,9,10,11],alta:[7,8,9,10],alpi:[7,8,9,10],sardegna:[10,11,0,1],sicilia:[10,11,0],sud:[9,10,11],appennino_cs:[8,9,10,11],appennino_c:[8,9,10,11],appennino_n:[8,9,10],litorale:[9,10,11],pianura:[9,10,11]},
+   tags:["Faggete","Abetaie","Autunno","Profumo fruttato"],
+   desc:"Simile al gallinaccio ma più piccolo, con gambo cavo giallastro. Cresce in tappeti fitti nelle faggete umide in autunno. Profumo fruttato intenso. Ottimo essiccato."},
+
+  // ─── AMANITA VAGINATA ────────────────────────────────────────────────────
+  {nome:"Amanita vaginata",sci:"Amanita vaginata",icon:"🩶",
+   cond:{tempMin:10,tempMax:24,umMin:60,umMax:90,phMin:4.5,phMax:7.0,quotaMin:100,quotaMax:1500,org:2},
+   veg:["faggi","querce","misto","castagni","abeti"],tipo:["franco","sabbioso","limoso"],
+   tipoEscluso:[],vegEsclusa:[],
+   stagioni:{default:[5,6,7,8,9,10],bassa:[5,6,7,8,9,10],alta:[6,7,8,9,10],alpi:[6,7,8,9,10],sardegna:[3,4,5,9,10,11],sicilia:[3,4,5,9,10,11],sud:[4,5,6,9,10,11],appennino_cs:[5,6,7,8,9,10],appennino_c:[5,6,7,8,9,10],appennino_n:[5,6,7,8,9,10],litorale:[5,6,7,8,9,10],pianura:[5,6,7,8,9,10]},
+   tags:["Ubiquitaria","Solo cotta","Volva a sacco"],
+   desc:"Diffusa in tutti i boschi. SOLO cotta — cruda è tossica. Assenza di anello sul gambo — carattere importante. Volva a sacco alla base. Attenzione massima: A. phalloides giovane ancora nell'uovo è quasi identica."},
+
+  // ─── AMANITA RUBESCENS ───────────────────────────────────────────────────
+  {nome:"Amanita rubescens",sci:"Amanita rubescens",icon:"🩷",
+   cond:{tempMin:10,tempMax:24,umMin:60,umMax:88,phMin:4.5,phMax:6.5,quotaMin:100,quotaMax:1600,org:2.5},
+   veg:["faggi","abeti","querce","castagni","misto"],tipo:["franco","sabbioso","limoso"],
+   tipoEscluso:[],vegEsclusa:[],
+   stagioni:{default:[5,6,7,8,9,10],bassa:[5,6,7,8,9,10],alta:[6,7,8,9,10],alpi:[6,7,8,9,10],sardegna:[3,4,5,9,10,11],sicilia:[3,4,5,9,10,11],sud:[4,5,6,9,10,11],appennino_cs:[5,6,7,8,9,10],appennino_c:[5,6,7,8,9,10],appennino_n:[5,6,7,8,9,10],litorale:[5,6,7,8,9,10],pianura:[5,6,7,8,9,10]},
+   tags:["Ubiquitaria","Solo cotta","Carne arrossa"],
+   desc:"La carne arrossa al taglio e alla pressione — carattere distintivo. Molto comune in tutti i boschi. SOLO cotta — cruda contiene emolisine termolabili. Non confondere con A. pantherina (non arrossa)."},
+
+  // ─── VESCIA ──────────────────────────────────────────────────────────────
+  {nome:"Vescia",sci:"Calvatia/Lycoperdon spp.",icon:"⚽",
+   cond:{tempMin:8,tempMax:24,umMin:55,umMax:85,phMin:5.0,phMax:7.5,quotaMin:0,quotaMax:1500,org:2},
+   veg:["prati","misto","querce","faggi"],tipo:["franco","sabbioso","calcareo"],
+   tipoEscluso:[],vegEsclusa:[],
+   stagioni:{default:[6,7,8,9,10],bassa:[5,6,7,8,9,10,11],alta:[6,7,8,9,10],alpi:[6,7,8,9,10],sardegna:[9,10,11,0,1,2,3,4],sicilia:[9,10,11,0,1,2,3],sud:[5,6,7,8,9,10,11],appennino_cs:[6,7,8,9,10],appennino_c:[6,7,8,9,10],appennino_n:[6,7,8,9,10],litorale:[6,7,8,9,10,11],pianura:[5,6,7,8,9,10,11]},
+   tags:["Prati e boschi","Solo da giovane","Carne bianca"],
+   desc:"Commestibile SOLO quando la carne interna è completamente bianca e compatta. Diffusissima in prati e boschi di tutta Italia. In Sardegna e Sicilia disponibile quasi tutto l'anno."},
+
+  // ─── FINFERLO INVERNALE ──────────────────────────────────────────────────
+  {nome:"Finferlo invernale",sci:"Craterellus tubaeformis",icon:"🍂",
+   cond:{tempMin:2,tempMax:14,umMin:70,umMax:96,phMin:4.0,phMax:6.0,quotaMin:200,quotaMax:1400,org:3.5},
+   veg:["faggi","abeti","misto"],tipo:["limoso","franco","torboso"],
+   tipoEscluso:["sabbioso","calcareo"],vegEsclusa:["macchia","prati"],areeEscluse:["sicilia","sardegna"],
+   stagioni:{default:[10,11,0,1],bassa:[10,11,0,1,2],alta:[9,10,11],alpi:[9,10,11,0],sud:[10,11,0],appennino_cs:[10,11,0,1],appennino_c:[10,11,0,1],appennino_n:[9,10,11,0],litorale:[10,11,0],pianura:[10,11,0]},
+   tags:["Autunno-inverno","Faggete umide","Resiste al gelo"],
+   desc:"Specie invernale delle faggete umide. Gambo cavo giallastro, cappello a imbuto grigio-brunastro. Resiste al gelo. Cresce a ciuffi fitti nella lettiera. Ottimo essiccato e in polvere."},
+
+  // ─── BOLETO ESTATINO ─────────────────────────────────────────────────────
+  {nome:"Boleto estatino",sci:"Boletus reticulatus",icon:"☀️",
+   cond:{tempMin:14,tempMax:26,umMin:60,umMax:88,phMin:5.0,phMax:7.0,quotaMin:100,quotaMax:1200,org:2.5},
+   veg:["querce","castagni","faggi","misto","lecci"],tipo:["franco","sabbioso","calcareo"],
+   tipoEscluso:[],vegEsclusa:["abeti","prati","macchia"],
+   stagioni:{default:[5,6,7],bassa:[4,5,6,7],alta:[5,6,7,8],alpi:[6,7,8],sardegna:[4,5,6],sicilia:[4,5,6],sud:[4,5,6,7],appennino_cs:[5,6,7],appennino_c:[5,6,7],appennino_n:[5,6,7],litorale:[4,5,6,7],pianura:[4,5,6,7]},
+   tags:["Estate","Quercete","Cappello chiaro screpolato"],
+   desc:"Il porcino estivo (sinonimo B. aestivalis). Cappello ocra-brunastro, cuticola asciutta e spesso screpolata a mosaico — carattere distintivo. Quercete e castagneti a quote basse. Maggio-luglio. Più precoce del porcino autunnale, tollerante al caldo."},
+
+  // ─── BOLETO DEI PINI ─────────────────────────────────────────────────────
+  {nome:"Boleto dei pini",sci:"Boletus pinophilus",icon:"🌲",
+   cond:{tempMin:6,tempMax:18,umMin:60,umMax:92,phMin:4.0,phMax:6.0,quotaMin:200,quotaMax:1900,org:3.5},
+   veg:["abeti","faggi","castagni","misto"],tipo:["sabbioso","franco","limoso"],
+   tipoEscluso:["calcareo"],vegEsclusa:["querce","macchia","prati","lecci"],
+   stagioni:{default:[4,5,6,7,8,9,10,11],bassa:[4,5,6,9,10,11],alta:[5,6,7,8,9,10],alpi:[5,6,7,8,9,10,11],sardegna:[9,10,11],sicilia:[9,10,11],sud:[4,5,9,10,11],appennino_cs:[4,5,7,8,9,10,11],appennino_c:[4,5,7,8,9,10,11],appennino_n:[4,5,7,8,9,10,11],litorale:[9,10,11],pianura:[9,10,11]},
+   tags:["Pinete e abetaie","Duplice stagione","Cappello rosso-brunastro","Il più grande dei porcini"],
+   desc:"Il porcino rosso — il più grande della sezione Edules, esemplari fino a 2kg. Duplice produzione: primavera (maggio, il primo porcino dell'anno) e tardo autunno (l'ultimo). Cresce anche sotto faggi, castagni e betulle oltre che conifere. Tinge di verde l'acqua di cottura."},
+
+  // ─── PINAROLO ────────────────────────────────────────────────────────────
+  {nome:"Pinarolo",sci:"Suillus granulatus",icon:"🫙",
+   cond:{tempMin:10,tempMax:22,umMin:60,umMax:88,phMin:4.5,phMax:6.0,quotaMin:0,quotaMax:1500,org:2},
+   veg:["abeti"],tipo:["sabbioso","franco"],
+   tipoEscluso:["calcareo","argilloso"],vegEsclusa:["faggi","querce","castagni","macchia","prati","lecci"],
+   stagioni:{default:[5,6,7,8,9,10],bassa:[5,6,7,8,9,10],alta:[6,7,8,9,10],alpi:[6,7,8,9,10],sardegna:[9,10,11,0,1],sicilia:[9,10,11,0,1],sud:[9,10,11,5,6],appennino_cs:[5,6,7,8,9,10],appennino_c:[5,6,7,8,9,10],appennino_n:[5,6,7,8,9,10],litorale:[5,6,7,8,9,10],pianura:[5,6,7,8,9,10]},
+   tags:["Pinete","Lunga stagione","Granuli bianchi sul gambo"],
+   desc:"Strettamente legato ai pini. Caratteristici granuli bianchi sul gambo giovane. Sbucciare il cappello prima della cottura. Molto comune nelle pinete costiere e montane."},
+
+  // ─── CORTINARIO ──────────────────────────────────────────────────────────
+  {nome:"Cortinario",sci:"Cortinarius praestans",icon:"🟣",
+   cond:{tempMin:8,tempMax:18,umMin:65,umMax:90,phMin:6.0,phMax:8.0,quotaMin:200,quotaMax:1600,org:3},
+   veg:["faggi","querce","castagni","misto"],tipo:["calcareo","franco","limoso"],
+   tipoEscluso:["sabbioso"],vegEsclusa:["macchia","prati","abeti","lecci"],
+   areeEscluse:["litorale"],
+   stagioni:{default:[7,8,9,10],bassa:[7,8,9,10],alta:[7,8,9],alpi:[7,8,9,10],sardegna:[9,10,11],sicilia:[9,10,11],sud:[8,9,10],appennino_cs:[8,9,10],appennino_c:[7,8,9,10],appennino_n:[7,8,9,10],pianura:[8,9,10]},
+   tags:["Faggete calcaree","Il gigante dei Cortinari","Estate-Autunno"],
+   desc:"Il gigante del genere (cappello fino a 25cm). Faggete e quercete su suoli calcarei, tarda estate-autunno. Da molti preferito al porcino. Cappello corrugato radialmente, assenza di bulbo marginato. ATTENZIONE: identificazione certa obbligatoria — molti Cortinarius sono mortalmente tossici."},
+
+  // ─── MARZOLINO ───────────────────────────────────────────────────────────
+  {nome:"Marzolino",sci:"Morchella esculenta",icon:"🧽",
+   cond:{tempMin:6,tempMax:16,umMin:55,umMax:85,phMin:6.0,phMax:8.0,quotaMin:0,quotaMax:1200,org:2},
+   veg:["pioppi","noccioli","misto","querce","prati"],tipo:["franco","calcareo","limoso","sabbioso"],
+   tipoEscluso:[],vegEsclusa:["abeti"],
+   stagioni:{default:[2,3,4],bassa:[1,2,3,4],alta:[3,4,5],alpi:[4,5,6],sardegna:[1,2,3],sicilia:[1,2,3],sud:[1,2,3,4],appennino_cs:[2,3,4],appennino_c:[2,3,4],appennino_n:[3,4,5],pianura:[2,3,4],litorale:[2,3,4]},
+   tags:["Primavera","Ascomicete","Boschi e frutteti","Solo cotto"],
+   desc:"Simile alla spugnola, cappello più tondeggiante. Cresce in primavera in boschi di latifoglie, vecchi frutteti e terreni disturbati. Va SEMPRE consumato cotto. Ottimo essiccato."},
+
+  // ─── PRUGNOLO ────────────────────────────────────────────────────────────
+  {nome:"Prugnolo",sci:"Calocybe gambosa",icon:"🌸",
+   cond:{tempMin:8,tempMax:20,umMin:50,umMax:80,phMin:6.0,phMax:8.0,quotaMin:0,quotaMax:1200,org:1.5},
+   veg:["prati","macchia","querce","misto"],tipo:["calcareo","franco","sabbioso"],
+   tipoEscluso:[],vegEsclusa:["abeti","faggi"],
+   stagioni:{default:[3,4,5],bassa:[2,3,4,5],alta:[4,5,6],alpi:[4,5,6],sardegna:[1,2,3,4],sicilia:[1,2,3,4],sud:[2,3,4,5],appennino_cs:[3,4,5],appennino_c:[3,4,5],appennino_n:[4,5,6],pianura:[3,4,5],litorale:[3,4,5]},
+   tags:["Primavera","Fungo di San Giorgio","Prati","Odore farinoso"],
+   desc:"Il fungo di San Giorgio (23 aprile). Cresce in cerchi nelle radure erbose vicino al prugnolo selvatico (Prunus spinosa) e siepi. Odore farinoso inconfondibile — come farina fresca. Bianco-crema, compatto. Ottimo trifolato. Diffuso da pianura a 1200m."},
+
+  // ─── MARZUOLO ────────────────────────────────────────────────────────────
+  {nome:"Marzuolo",sci:"Hygrophorus marzuolus",icon:"❄️",
+   cond:{tempMin:-2,tempMax:10,umMin:60,umMax:95,phMin:4.5,phMax:6.5,quotaMin:300,quotaMax:2000,org:3},
+   veg:["abeti","faggi","misto","querce","castagni"],tipo:["limoso","franco","torboso"],
+   tipoEscluso:["sabbioso","calcareo"],vegEsclusa:["macchia","prati","lecci"],
+   areeEscluse:["litorale","pianura","sicilia"],
+   stagioni:{default:[1,2,3,4],bassa:[1,2,3],alta:[2,3,4,5],alpi:[2,3,4,5],sardegna:[1,2,3],sud:[1,2,3],appennino_cs:[2,3,4],appennino_c:[2,3,4],appennino_n:[2,3,4,5]},
+   tags:["Invernale","Sotto la neve","Abetaie e faggete","Il dormiente"],
+   desc:"Noto come il 'dormiente'. Emerge allo scioglimento delle nevi in abetaie, faggete e boschi di cerro. Crescita semiipogea — difficile da scorgere interrato. Trovato anche a 500m in cerrete. Uno dei migliori commestibili invernali."},
 ];
 
 // ─── STATO
@@ -1017,11 +1106,21 @@ function calcSpecie(t,u,q,soil,veg,month,piogge={}) {
     }
     if(inStagione) fattori.push({ok:true,txt:"stagione ottimale"});
     else if(bordoStagione) fattori.push({ok:null,txt:"bordo stagione"});
-    // Fase nascita nei fattori
-    if(fase&&fase!=="sconosciuta") {
-      const fL={troppo_recente:"pioggia recente — terreno saturo",fase_attesa:"in attesa (1-2gg)",fase_ottimale:"fase ottimale ✓ ("+p14+"mm/14gg)",fase_tardiva:"fase tardiva ("+p14+"mm/14gg)",troppo_secco:"troppo secco ("+p14+"mm/14gg)"};
-      const fO={fase_ottimale:true,fase_tardiva:null,troppo_recente:false,fase_attesa:null,troppo_secco:false};
-      fattori.push({ok:fO[fase]??null, txt:fL[fase]||fase});
+    if(p10!=null){
+      if(p10>=40&&p10<=100&&gsec>=3&&gsec<=10)
+        fattori.push({ok:true, txt:"piogge ideali ("+p10+"mm/14gg, "+gsec+"gg asciutti)"});
+      else if(p10>=25&&gsec>=2&&gsec<=14)
+        fattori.push({ok:true, txt:"piogge sufficienti ("+p10+"mm, "+gsec+"gg fa)"});
+      else if(p10<15)
+        fattori.push({ok:false, txt:"troppo secco ("+p10+"mm, servono 40-100mm)"});
+      else if(p10>120)
+        fattori.push({ok:false, txt:"piogge eccessive ("+p10+"mm)"});
+      else if(gsec>14)
+        fattori.push({ok:false, txt:"piogge troppo lontane ("+gsec+"gg fa)"});
+      else if(gsec<3)
+        fattori.push({ok:null, txt:"ancora bagnato ("+gsec+"gg asciutti, servono 3-5)"});
+      else
+        fattori.push({ok:null, txt:"piogge "+p10+"mm ("+gsec+"gg fa)"});
     }
     return {...sp, pct:Math.min(99,Math.round((score/max)*100)), fattori};;
   }).sort((a,b)=>b.pct-a.pct);
@@ -1113,12 +1212,6 @@ async function getMeteoMulti(lat, lon) {
     escursione: valid[0].escursione,
     tMax: valid[0].tMax,
     tMin: valid[0].tMin,
-    tNotte: valid[0].tNotte??null,
-    tGiorno: valid[0].tGiorno??null,
-    tPesata: valid[0].tPesata??null,
-    faseNascita: valid[0].faseNascita??null,
-    qualitaPioggia: valid[0].qualitaPioggia??null,
-    mmUltimi24h: valid[0].mmUltimi24h??0,
   };
 }
 
@@ -1187,7 +1280,7 @@ async function getMeteo(lat,lon) {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`
     + `&current=temperature_2m,relative_humidity_2m,soil_moisture_0_to_1cm,surface_pressure`
     + `&current=soil_temperature_0cm,wind_speed_10m,cloud_cover`
-    + `&hourly=surface_pressure,temperature_2m,precipitation`
+    + `&hourly=surface_pressure`
     + `&daily=precipitation_sum,temperature_2m_max,temperature_2m_min,relative_humidity_2m_max`
     + `&past_days=14&forecast_days=1`
     + `&timezone=auto`;
@@ -1235,27 +1328,6 @@ async function getMeteo(lat,lon) {
   const tMax0 = d.daily?.temperature_2m_max?.[d.daily.temperature_2m_max.length-1];
   const tMin0 = d.daily?.temperature_2m_min?.[d.daily.temperature_2m_min.length-1];
   const escursione = (tMax0!=null && tMin0!=null) ? Math.round((tMax0-tMin0)*10)/10 : null;
-  // T° notturna/diurna pesata
-  const tempH=d.hourly?.temperature_2m||[], nH2=tempH.length;
-  let tNotte=null,tGiorno=null;
-  if(nH2>=24){
-    const nv=[],gv=[];
-    for(let i=nH2-24;i<nH2;i++){const o=i%24;if([22,23,0,1,2,3,4,5,6].includes(o)&&tempH[i]!=null)nv.push(tempH[i]);else if(o>=7&&o<=21&&tempH[i]!=null)gv.push(tempH[i]);}
-    if(nv.length)tNotte=Math.round(nv.reduce((a,b)=>a+b,0)/nv.length*10)/10;
-    if(gv.length)tGiorno=Math.round(gv.reduce((a,b)=>a+b,0)/gv.length*10)/10;
-  }
-  const tPesata=(tNotte!=null&&tGiorno!=null)?Math.round((tNotte*0.6+tGiorno*0.4)*10)/10:null;
-  // Analisi piogge orarie
-  const pH=d.hourly?.precipitation||[], nPH=pH.length;
-  const p24=pH.slice(-24);
-  const mmN=p24.filter((_,i)=>{const o=i%24;return o>=22||o<=6;}).reduce((a,v)=>a+(v||0),0);
-  const mmP=p24.filter((_,i)=>{const o=i%24;return o>=12&&o<=18;}).reduce((a,v)=>a+(v||0),0);
-  const mmM=p24.filter((_,i)=>{const o=i%24;return o>=6&&o<12;}).reduce((a,v)=>a+(v||0),0);
-  const mmU24=p24.reduce((a,v)=>a+(v||0),0);
-  let ore=0; for(let i=pH.length-1;i>=0;i--){if((pH[i]||0)>=0.5)break;ore++;}
-  const qualitaPioggia=mmN>mmP?"notturna":mmM>mmP?"mattutina":mmP>1?"pomeridiana":"assente";
-  const faseNascita=ore<24?"troppo_recente":ore<48?"fase_attesa":ore<120?"fase_ottimale":ore<240?"fase_tardiva":"troppo_secco";
-
   return {
     temp: Math.round(d.current.temperature_2m*10)/10,
     um: d.current.relative_humidity_2m,
@@ -1273,8 +1345,6 @@ async function getMeteo(lat,lon) {
     escursione,
     tMax: tMax0!=null ? Math.round(tMax0*10)/10 : null,
     tMin: tMin0!=null ? Math.round(tMin0*10)/10 : null,
-    tNotte, tGiorno, tPesata,
-    faseNascita, qualitaPioggia, mmUltimi24h:mmU24,
   };
 }
 
@@ -1414,12 +1484,6 @@ async function getMeteoMulti(lat, lon) {
     escursione: valid[0].escursione,
     tMax: valid[0].tMax,
     tMin: valid[0].tMin,
-    tNotte: valid[0].tNotte??null,
-    tGiorno: valid[0].tGiorno??null,
-    tPesata: valid[0].tPesata??null,
-    faseNascita: valid[0].faseNascita??null,
-    qualitaPioggia: valid[0].qualitaPioggia??null,
-    mmUltimi24h: valid[0].mmUltimi24h??0,
   };
 }
 
@@ -1488,7 +1552,7 @@ async function getMeteo(lat,lon) {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`
     + `&current=temperature_2m,relative_humidity_2m,soil_moisture_0_to_1cm,surface_pressure`
     + `&current=soil_temperature_0cm,wind_speed_10m,cloud_cover`
-    + `&hourly=surface_pressure,temperature_2m,precipitation`
+    + `&hourly=surface_pressure`
     + `&daily=precipitation_sum,temperature_2m_max,temperature_2m_min,relative_humidity_2m_max`
     + `&past_days=14&forecast_days=1`
     + `&timezone=auto`;
@@ -1536,27 +1600,6 @@ async function getMeteo(lat,lon) {
   const tMax0 = d.daily?.temperature_2m_max?.[d.daily.temperature_2m_max.length-1];
   const tMin0 = d.daily?.temperature_2m_min?.[d.daily.temperature_2m_min.length-1];
   const escursione = (tMax0!=null && tMin0!=null) ? Math.round((tMax0-tMin0)*10)/10 : null;
-  // T° notturna/diurna pesata
-  const tempH=d.hourly?.temperature_2m||[], nH2=tempH.length;
-  let tNotte=null,tGiorno=null;
-  if(nH2>=24){
-    const nv=[],gv=[];
-    for(let i=nH2-24;i<nH2;i++){const o=i%24;if([22,23,0,1,2,3,4,5,6].includes(o)&&tempH[i]!=null)nv.push(tempH[i]);else if(o>=7&&o<=21&&tempH[i]!=null)gv.push(tempH[i]);}
-    if(nv.length)tNotte=Math.round(nv.reduce((a,b)=>a+b,0)/nv.length*10)/10;
-    if(gv.length)tGiorno=Math.round(gv.reduce((a,b)=>a+b,0)/gv.length*10)/10;
-  }
-  const tPesata=(tNotte!=null&&tGiorno!=null)?Math.round((tNotte*0.6+tGiorno*0.4)*10)/10:null;
-  // Analisi piogge orarie
-  const pH=d.hourly?.precipitation||[], nPH=pH.length;
-  const p24=pH.slice(-24);
-  const mmN=p24.filter((_,i)=>{const o=i%24;return o>=22||o<=6;}).reduce((a,v)=>a+(v||0),0);
-  const mmP=p24.filter((_,i)=>{const o=i%24;return o>=12&&o<=18;}).reduce((a,v)=>a+(v||0),0);
-  const mmM=p24.filter((_,i)=>{const o=i%24;return o>=6&&o<12;}).reduce((a,v)=>a+(v||0),0);
-  const mmU24=p24.reduce((a,v)=>a+(v||0),0);
-  let ore=0; for(let i=pH.length-1;i>=0;i--){if((pH[i]||0)>=0.5)break;ore++;}
-  const qualitaPioggia=mmN>mmP?"notturna":mmM>mmP?"mattutina":mmP>1?"pomeridiana":"assente";
-  const faseNascita=ore<24?"troppo_recente":ore<48?"fase_attesa":ore<120?"fase_ottimale":ore<240?"fase_tardiva":"troppo_secco";
-
   return {
     temp: Math.round(d.current.temperature_2m*10)/10,
     um: d.current.relative_humidity_2m,
@@ -1574,8 +1617,6 @@ async function getMeteo(lat,lon) {
     escursione,
     tMax: tMax0!=null ? Math.round(tMax0*10)/10 : null,
     tMin: tMin0!=null ? Math.round(tMin0*10)/10 : null,
-    tNotte, tGiorno, tPesata,
-    faseNascita, qualitaPioggia, mmUltimi24h:mmU24,
   };
 }
 
@@ -1670,36 +1711,6 @@ async function reverseGeocode(lat,lon) {
   } catch(e) { return "zona"; }
 }
 
-async function callClaude(prompt, useWebSearch=false) {
-  const key = getApiKey();
-  if(!key) throw new Error("No API key");
-  const body = {
-    model: CLAUDE_MODEL,
-    max_tokens: 1000,
-    messages: [{role:"user", content:prompt}]
-  };
-  if(useWebSearch) body.tools = [{type:"web_search_20250305",name:"web_search"}];
-  const r=await fetch("https://api.anthropic.com/v1/messages",{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json",
-      "x-api-key": key,
-      "anthropic-version": "2023-06-01",
-      "anthropic-dangerous-direct-browser-access": "true"
-    },
-    body: JSON.stringify(body)
-  });
-  if(!r.ok) {
-    const err = await r.json().catch(()=>({}));
-    throw new Error(err?.error?.message || `HTTP ${r.status}`);
-  }
-  const data = await r.json();
-  // Registra uso crediti
-  const usage = data.usage || {};
-  registraChiamata("AI", usage.input_tokens||0, usage.output_tokens||0);
-  return data;
-}
-
 // ─── RENDER ──────────────────────────────────────────────────────────────────
 function setStatus(msg, show=true, id="status") {
   const el=document.getElementById(id);
@@ -1779,15 +1790,8 @@ async function verificaFav(id) {
       fav.quota = elevRes.value;
     }
     const soil = s||{ph:null,tipo:null};
-    const piogge = {
-      pioggia14:m.pioggia14||0,pioggia10:m.pioggia10||0,pioggia3:m.pioggia3||0,
-      giorniSeccita:m.giorniSeccita??0,
-      pressione:{valore:m.pressione??null,tendenza:m.tendenzaPressione??null},
-      tNotte:m.tNotte??null,tGiorno:m.tGiorno??null,tPesata:m.tPesata??null,
-      faseNascita:m.faseNascita??null,qualitaPioggia:m.qualitaPioggia??null,
-      mmUltimi24h:m.mmUltimi24h||0,
-    };
-    state.macroarea = getMacroarea(fav.lat, fav.lon);
+    const piogge = {pioggia10:m.pioggia10, pioggia3:m.pioggia3, giorniSeccita:m.giorniSeccita??0};
+    // Calcola specie prima, poi globalScore tiene conto della stagione
     const vegSet = new Set(fav.veg||[]);
     const month = new Date().getMonth();
     const spList = calcSpecie(m.temp, m.um, fav.quota, soil, vegSet, month, piogge);
@@ -1795,11 +1799,13 @@ async function verificaFav(id) {
     const lbl = scoreToLabel(sc);
     fav.lastScore=sc; fav.lastCls=lbl.cls; fav.lastLabel=lbl.label;
     fav.lastSpecie=spList.slice(0,3).map(sp=>({nome:sp.nome,pct:sp.pct,icon:sp.icon}));
+    fav.lastTemp=m.temp; fav.lastUm=m.um;
+    fav.lastPiogge={pioggia10:m.pioggia10,giorniSeccita:m.giorniSeccita??0};
     saveFavs(); renderFavList();
     if(sc>=40 && fav.notifiche!==false) sendPush(fav.nome, lbl.label, sc);
+    // Popola il tab Radar con i dati verificati
     populateRadarFromFav(fav, m, soil, piogge, spList, sc);
   } catch(e) { console.error(e); }
-  finally { if(btn){btn.disabled=false;btn.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l5 5L20 7"/></svg> Verifica';} }
 }
 
 function esportaPreferiti() {
@@ -1953,14 +1959,6 @@ function renderExtra(extra) {
   const el = document.getElementById("extra-display");
   if(!el || !extra) return;
   const items = [];
-  if(state.piogge?.tNotte!=null) {
-    const ok=state.piogge.tNotte>=6&&state.piogge.tNotte<=14;
-    items.push({l:"T° notte (22-6)",v:state.piogge.tNotte+"°C",ok});
-  }
-  if(state.piogge?.tGiorno!=null) {
-    const ok=state.piogge.tGiorno>=10&&state.piogge.tGiorno<=22;
-    items.push({l:"T° giorno (6-22)",v:state.piogge.tGiorno+"°C",ok});
-  }
   if(extra.tSuolo!=null) {
     const ok = extra.tSuolo>=8&&extra.tSuolo<=18;
     items.push({l:"T° suolo", v:extra.tSuolo+"°C", ok});
@@ -1976,12 +1974,6 @@ function renderExtra(extra) {
   if(extra.vento!=null) {
     const ok = extra.vento<=20;
     items.push({l:"Vento", v:extra.vento+"km/h", ok});
-  }
-  if(state.piogge?.faseNascita) {
-    const fL={troppo_recente:"Troppo recente ⏳",fase_attesa:"In attesa 🕐",fase_ottimale:"Fase ottimale ✓",fase_tardiva:"Fase tardiva ~",troppo_secco:"Troppo secco ✗"};
-    const fO={fase_ottimale:true,fase_tardiva:null,troppo_recente:false,fase_attesa:null,troppo_secco:false};
-    const f=state.piogge.faseNascita;
-    items.push({l:"Fase nascita",v:fL[f]||f,ok:fO[f]??null});
   }
   if(!items.length) { el.style.display="none"; return; }
   el.style.display="grid";
@@ -2341,7 +2333,7 @@ async function analyzeCoords() {
   const meteoVal = (meteoRes.status==="fulfilled" && meteoRes.value) ? meteoRes.value : null;
   if(meteoVal) {
     temp=meteoVal.temp||15; um=meteoVal.um||65; soilMoist=meteoVal.soilMoist||null;
-    state.piogge={pioggia14:meteoVal.pioggia14||0,pioggia10:meteoVal.pioggia10||0,pioggia3:meteoVal.pioggia3||0,giorniSeccita:meteoVal.giorniSeccita||0,pressione:{valore:meteoVal.pressione,tendenza:meteoVal.tendenzaPressione},tNotte:meteoVal.tNotte??null,tGiorno:meteoVal.tGiorno??null,tPesata:meteoVal.tPesata??null,faseNascita:meteoVal.faseNascita??null,qualitaPioggia:meteoVal.qualitaPioggia??null,mmUltimi24h:meteoVal.mmUltimi24h||0};
+    state.piogge={pioggia14:meteoVal.pioggia14||0,pioggia10:meteoVal.pioggia10||0,pioggia3:meteoVal.pioggia3||0,giorniSeccita:meteoVal.giorniSeccita||0,pressione:{valore:meteoVal.pressione,tendenza:meteoVal.tendenzaPressione}};
     state.pressione={valore:meteoVal.pressione,tendenza:meteoVal.tendenzaPressione};
     state.extra={tSuolo:meteoVal.tSuolo,vento:meteoVal.vento,nuvolosita:meteoVal.nuvolosita,escursione:meteoVal.escursione,tMax:meteoVal.tMax,tMin:meteoVal.tMin};
     state.giorni7=meteoVal.giorni7||[];
@@ -2408,9 +2400,6 @@ function populateRadarFromFav(fav, m, soil, piogge, spList, score) {
   state.zona = fav.nome;
   state.vegSel = new Set(fav.veg||[]);
   state.lastSpecie = spList;
-  state.macroarea = getMacroarea(fav.lat, fav.lon);
-  state.extra = {tSuolo:m.tSuolo??null,vento:m.vento??null,nuvolosita:m.nuvolosita??null,escursione:m.escursione??null};
-  state.pressione = {valore:m.pressione??null,tendenza:m.tendenzaPressione??null};
 
   // Aggiorna campo coordinate nel Radar
   document.getElementById("coords-input").value = fav.lat.toFixed(6)+", "+fav.lon.toFixed(6);
@@ -2437,10 +2426,7 @@ function populateRadarFromFav(fav, m, soil, piogge, spList, score) {
   renderSpecie(spList);
   renderScoreDetail(m.temp, m.um, fav.quota, mergedSoil(), piogge, spList, score);
   renderMeteo7(m.giorni7||[]);
-  renderExtra(state.extra||{});
-  renderPressione(state.pressione);
   document.getElementById("main-content").style.display="block";
-  document.getElementById("btn-clear").style.display="inline-flex";
 
   // Vai al tab Radar
   switchTab("radar");
