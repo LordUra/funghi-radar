@@ -1,0 +1,30 @@
+Copyright (c) 2026 LordUra. Tutti i diritti riservati.
+
+Funghi Radar — App Android per la valutazione delle condizioni di crescita funghi.
+
+LICENZA PROPRIETARIA
+
+Il presente software, incluso il codice sorgente, il database delle specie fungine,
+gli algoritmi di calcolo probabilità e tutta la documentazione associata,
+è di proprietà esclusiva di LordUra e protetto dalle leggi sul diritto d'autore.
+
+È vietato:
+- Copiare, modificare o distribuire il software senza autorizzazione scritta
+- Utilizzare il codice o parti di esso in prodotti commerciali
+- Rimuovere o alterare le indicazioni di copyright
+
+È consentito:
+- Utilizzare l'app per uso personale
+- Studiare il codice per scopi educativi non commerciali
+
+Per licenze commerciali o collaborazioni: contattare l'autore tramite GitHub.
+
+Dati utilizzati:
+- Open-Meteo (open-meteo.com) — Licenza CC BY 4.0
+- OpenLandMap (openlandmap.org) — Licenza CC BY 4.0
+- OpenStreetMap (openstreetmap.org) — Licenza ODbL
+- Database specie fungine basato su schede AMINT (funghiitaliani.it)
+
+DISCLAIMER: L'app è fornita per uso esplorativo. Non sostituisce il parere
+di un micologo esperto. L'autore non è responsabile per un uso improprio
+delle informazioni fornite dall'applicazione.
