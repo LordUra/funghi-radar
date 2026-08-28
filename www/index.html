@@ -471,7 +471,7 @@ body {
 
 </div>
 
-<div class="footer">Funghi Radar v1.2 · Dati: Open-Meteo, OpenLandMap, OpenStreetMap<br>⚠️ Per uso esplorativo. Rivolgersi sempre a un micologo per il riconoscimento.</div>
+<div class="footer">© 2026 LordUra · Funghi Radar v1.2<br>Dati: Open-Meteo, OpenLandMap, OpenStreetMap<br>⚠️ Per uso esplorativo. Rivolgersi sempre a un micologo per il riconoscimento.</div>
 
 <script>
 
@@ -1346,36 +1346,36 @@ async function getMeteo(lat,lon) {
   const faseNascita=ore<24?"troppo_recente":ore<48?"fase_attesa":ore<120?"fase_ottimale":ore<240?"fase_tardiva":"troppo_secco";
 
   // T° notturna (tramonto → alba+1h) peso 60%, diurna (alba+1h → tramonto) peso 40%
-  // Usa sunrise/sunset reali da Open-Meteo per le coordinate e la data
+  // Usa sunrise/sunset reali da Open-Meteo
   const tempH=d.hourly?.temperature_2m||[], nH2=tempH.length;
-  const hourlyTimes=d.hourly?.time||[];
-  // Prendi sunrise/sunset di ieri e oggi (ultimi 2 giorni)
   const sunrises=d.daily?.sunrise||[], sunsets=d.daily?.sunset||[];
   let tNotte=null, tGiorno=null;
-  if(nH2>=24 && sunrises.length>=1 && sunsets.length>=1) {
-    // Tramonto di ieri e alba di oggi
-    const sunsetYest = sunsets.length>=2 ? new Date(sunsets[sunsets.length-2]) : null;
-    const sunriseToday = new Date(sunrises[sunrises.length-1]);
-    const sunsetToday = new Date(sunsets[sunsets.length-1]);
-    const albaFine = new Date(sunriseToday.getTime() + 60*60*1000); // alba+1h
+  if(nH2>=24) {
+    // Estrai ora decimale da stringa "2026-08-17T06:15" → 6.25
+    const toHourDec = s => { if(!s) return null; const p=s.split('T'); if(p.length<2) return null; const hm=p[1].split(':'); return parseInt(hm[0])+(parseInt(hm[1]||0)/60); };
+    // Alba e tramonto di oggi come ora decimale
+    const albaH = toHourDec(sunrises[sunrises.length-1]);
+    const tramH = toHourDec(sunsets[sunsets.length-1]);
+    // Tramonto di ieri
+    const tramIeriH = sunsets.length>=2 ? toHourDec(sunsets[sunsets.length-2]) : tramH;
     const nv=[], gv=[];
-    for(let i=nH2-24; i<nH2; i++) {
-      if(tempH[i]==null || !hourlyTimes[i]) continue;
-      const t=new Date(hourlyTimes[i]);
-      // Notturno: da tramonto di ieri a alba+1h di oggi, OPPURE da tramonto di oggi in poi
-      const isNotte = (sunsetYest && t>=sunsetYest && t<albaFine) || t>=sunsetToday;
-      if(isNotte) nv.push(tempH[i]);
-      else gv.push(tempH[i]);
+    if(albaH!=null && tramH!=null) {
+      const albaFineH = albaH + 1; // alba+1h
+      for(let i=nH2-24; i<nH2; i++) {
+        if(tempH[i]==null) continue;
+        const ora = i % 24; // ora del giorno (0-23)
+        // Notte = prima di albaFine OPPURE dopo tramonto
+        const isNotte = ora < albaFineH || ora >= tramH;
+        if(isNotte) nv.push(tempH[i]);
+        else gv.push(tempH[i]);
+      }
+    } else {
+      // Fallback range fisso
+      for(let i=nH2-24;i<nH2;i++){const o=i%24;if(o>=22||o<=6)nv.push(tempH[i]??null);else gv.push(tempH[i]??null);}
     }
-    if(nv.length) tNotte=Math.round(nv.reduce((a,b)=>a+b,0)/nv.length*10)/10;
-    if(gv.length) tGiorno=Math.round(gv.reduce((a,b)=>a+b,0)/gv.length*10)/10;
-  }
-  // Fallback se sunrise/sunset non disponibili
-  if(tNotte==null && nH2>=24) {
-    const nv=[], gv=[];
-    for(let i=nH2-24;i<nH2;i++){const o=i%24;if([22,23,0,1,2,3,4,5,6].includes(o)&&tempH[i]!=null)nv.push(tempH[i]);else if(o>=7&&o<=21&&tempH[i]!=null)gv.push(tempH[i]);}
-    if(nv.length)tNotte=Math.round(nv.reduce((a,b)=>a+b,0)/nv.length*10)/10;
-    if(gv.length)tGiorno=Math.round(gv.reduce((a,b)=>a+b,0)/gv.length*10)/10;
+    const nv2=nv.filter(v=>v!=null), gv2=gv.filter(v=>v!=null);
+    if(nv2.length)tNotte=Math.round(nv2.reduce((a,b)=>a+b,0)/nv2.length*10)/10;
+    if(gv2.length)tGiorno=Math.round(gv2.reduce((a,b)=>a+b,0)/gv2.length*10)/10;
   }
   const tPesata=(tNotte!=null&&tGiorno!=null)
     ? Math.round((tNotte*0.6+tGiorno*0.4)*10)/10 : null;
@@ -1671,36 +1671,36 @@ async function getMeteo(lat,lon) {
   const faseNascita=ore<24?"troppo_recente":ore<48?"fase_attesa":ore<120?"fase_ottimale":ore<240?"fase_tardiva":"troppo_secco";
 
   // T° notturna (tramonto → alba+1h) peso 60%, diurna (alba+1h → tramonto) peso 40%
-  // Usa sunrise/sunset reali da Open-Meteo per le coordinate e la data
+  // Usa sunrise/sunset reali da Open-Meteo
   const tempH=d.hourly?.temperature_2m||[], nH2=tempH.length;
-  const hourlyTimes=d.hourly?.time||[];
-  // Prendi sunrise/sunset di ieri e oggi (ultimi 2 giorni)
   const sunrises=d.daily?.sunrise||[], sunsets=d.daily?.sunset||[];
   let tNotte=null, tGiorno=null;
-  if(nH2>=24 && sunrises.length>=1 && sunsets.length>=1) {
-    // Tramonto di ieri e alba di oggi
-    const sunsetYest = sunsets.length>=2 ? new Date(sunsets[sunsets.length-2]) : null;
-    const sunriseToday = new Date(sunrises[sunrises.length-1]);
-    const sunsetToday = new Date(sunsets[sunsets.length-1]);
-    const albaFine = new Date(sunriseToday.getTime() + 60*60*1000); // alba+1h
+  if(nH2>=24) {
+    // Estrai ora decimale da stringa "2026-08-17T06:15" → 6.25
+    const toHourDec = s => { if(!s) return null; const p=s.split('T'); if(p.length<2) return null; const hm=p[1].split(':'); return parseInt(hm[0])+(parseInt(hm[1]||0)/60); };
+    // Alba e tramonto di oggi come ora decimale
+    const albaH = toHourDec(sunrises[sunrises.length-1]);
+    const tramH = toHourDec(sunsets[sunsets.length-1]);
+    // Tramonto di ieri
+    const tramIeriH = sunsets.length>=2 ? toHourDec(sunsets[sunsets.length-2]) : tramH;
     const nv=[], gv=[];
-    for(let i=nH2-24; i<nH2; i++) {
-      if(tempH[i]==null || !hourlyTimes[i]) continue;
-      const t=new Date(hourlyTimes[i]);
-      // Notturno: da tramonto di ieri a alba+1h di oggi, OPPURE da tramonto di oggi in poi
-      const isNotte = (sunsetYest && t>=sunsetYest && t<albaFine) || t>=sunsetToday;
-      if(isNotte) nv.push(tempH[i]);
-      else gv.push(tempH[i]);
+    if(albaH!=null && tramH!=null) {
+      const albaFineH = albaH + 1; // alba+1h
+      for(let i=nH2-24; i<nH2; i++) {
+        if(tempH[i]==null) continue;
+        const ora = i % 24; // ora del giorno (0-23)
+        // Notte = prima di albaFine OPPURE dopo tramonto
+        const isNotte = ora < albaFineH || ora >= tramH;
+        if(isNotte) nv.push(tempH[i]);
+        else gv.push(tempH[i]);
+      }
+    } else {
+      // Fallback range fisso
+      for(let i=nH2-24;i<nH2;i++){const o=i%24;if(o>=22||o<=6)nv.push(tempH[i]??null);else gv.push(tempH[i]??null);}
     }
-    if(nv.length) tNotte=Math.round(nv.reduce((a,b)=>a+b,0)/nv.length*10)/10;
-    if(gv.length) tGiorno=Math.round(gv.reduce((a,b)=>a+b,0)/gv.length*10)/10;
-  }
-  // Fallback se sunrise/sunset non disponibili
-  if(tNotte==null && nH2>=24) {
-    const nv=[], gv=[];
-    for(let i=nH2-24;i<nH2;i++){const o=i%24;if([22,23,0,1,2,3,4,5,6].includes(o)&&tempH[i]!=null)nv.push(tempH[i]);else if(o>=7&&o<=21&&tempH[i]!=null)gv.push(tempH[i]);}
-    if(nv.length)tNotte=Math.round(nv.reduce((a,b)=>a+b,0)/nv.length*10)/10;
-    if(gv.length)tGiorno=Math.round(gv.reduce((a,b)=>a+b,0)/gv.length*10)/10;
+    const nv2=nv.filter(v=>v!=null), gv2=gv.filter(v=>v!=null);
+    if(nv2.length)tNotte=Math.round(nv2.reduce((a,b)=>a+b,0)/nv2.length*10)/10;
+    if(gv2.length)tGiorno=Math.round(gv2.reduce((a,b)=>a+b,0)/gv2.length*10)/10;
   }
   const tPesata=(tNotte!=null&&tGiorno!=null)
     ? Math.round((tNotte*0.6+tGiorno*0.4)*10)/10 : null;
