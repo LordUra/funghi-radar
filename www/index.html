@@ -1348,70 +1348,61 @@ async function getMeteo(lat,lon) {
   const qualitaPioggia=mmN>mmP?"notturna":mmM>mmP?"mattutina":mmP>1?"pomeridiana":"assente";
   const faseNascita=ore<24?"troppo_recente":ore<48?"fase_attesa":ore<120?"fase_ottimale":ore<240?"fase_tardiva":"troppo_secco";
 
-  // T° notturna (tramonto → alba+1h) peso 60%, diurna (alba+1h → tramonto) peso 40%
-  // Usa sunrise/sunset reali da Open-Meteo per le coordinate e la data
-  const tempH=d.hourly?.temperature_2m||[], nH2=tempH.length;
-  const hourlyTimes=d.hourly?.time||[];
-  // Prendi sunrise/sunset di ieri e oggi (ultimi 2 giorni)
-  const sunrises=d.daily?.sunrise||[], sunsets=d.daily?.sunset||[];
-  let tNotte=null, tGiorno=null;
-  if(nH2>=24 && sunrises.length>=1 && sunsets.length>=1) {
-    // Tramonto di ieri e alba di oggi
-    const sunsetYest = sunsets.length>=2 ? new Date(sunsets[sunsets.length-2]) : null;
-    const sunriseToday = new Date(sunrises[sunrises.length-1]);
-    const sunsetToday = new Date(sunsets[sunsets.length-1]);
-    const albaFine = new Date(sunriseToday.getTime() + 60*60*1000); // alba+1h
-    const nv=[], gv=[];
-    for(let i=nH2-24; i<nH2; i++) {
-      if(tempH[i]==null || !hourlyTimes[i]) continue;
-      const t=new Date(hourlyTimes[i]);
-      // Notturno: da tramonto di ieri a alba+1h di oggi, OPPURE da tramonto di oggi in poi
-      const isNotte = (sunsetYest && t>=sunsetYest && t<albaFine) || t>=sunsetToday;
-      if(isNotte) nv.push(tempH[i]);
-      else gv.push(tempH[i]);
-    }
-    if(nv.length) tNotte=Math.round(nv.reduce((a,b)=>a+b,0)/nv.length*10)/10;
-    if(gv.length) tGiorno=Math.round(gv.reduce((a,b)=>a+b,0)/gv.length*10)/10;
-  }
-  // Fallback se sunrise/sunset non disponibili
-  if(tNotte==null && nH2>=24) {
-    const nv=[], gv=[];
-    for(let i=nH2-24;i<nH2;i++){const o=i%24;if([22,23,0,1,2,3,4,5,6].includes(o)&&tempH[i]!=null)nv.push(tempH[i]);else if(o>=7&&o<=21&&tempH[i]!=null)gv.push(tempH[i]);}
-    if(nv.length)tNotte=Math.round(nv.reduce((a,b)=>a+b,0)/nv.length*10)/10;
-    if(gv.length)tGiorno=Math.round(gv.reduce((a,b)=>a+b,0)/gv.length*10)/10;
-  }
-  const tPesata=(tNotte!=null&&tGiorno!=null)
-    ? Math.round((tNotte*0.6+tGiorno*0.4)*10)/10 : null;
-
-  // Valori di IERI (24-48h fa) per il calcolo probabilità
-  // I funghi trovati oggi sono nati ieri notte — usiamo quelle condizioni
+  // ── VALORI 24-72h FA (notte 27-28, giorno 28 se oggi è 29) ─────────────────
   const nH2ieri = (d.hourly?.temperature_2m||[]).length;
-  const sliceIeri = [Math.max(0,nH2ieri-48), Math.max(0,nH2ieri-24)]; // ieri
-  
-  // Temperatura oraria di ieri
   const tempHieri = d.hourly?.temperature_2m||[];
-  const tempIeriArr = tempHieri.slice(sliceIeri[0], sliceIeri[1]).filter(v=>v!=null);
+  const umH = d.hourly?.relative_humidity_2m||[];
+  const pressH = d.hourly?.surface_pressure||[];
+  const sunrises = d.daily?.sunrise||[], sunsets = d.daily?.sunset||[];
+
+  // Finestra: 24-72h fa (copre notte 27-28 e giorno 28)
+  const sliceNotte = [Math.max(0,nH2ieri-72), Math.max(0,nH2ieri-48)]; // notte 27-28
+  const sliceGiorno = [Math.max(0,nH2ieri-48), Math.max(0,nH2ieri-24)]; // giorno 28
+
+  // Alba/tramonto dell'altroieri (notte 27-28) — differenza con oggi trascurabile
+  const toHourDec = s => { if(!s) return null; const p=s.split('T'); if(p.length<2) return null; const hm=p[1].split(':'); return parseInt(hm[0])+(parseInt(hm[1]||0)/60); };
+  const albaH = sunrises.length>=3 ? toHourDec(sunrises[sunrises.length-3]) : toHourDec(sunrises[0]);
+  const tramH = sunsets.length>=3 ? toHourDec(sunsets[sunsets.length-3]) : toHourDec(sunsets[0]);
+  const albaFineH = albaH!=null ? albaH+1 : 7;
+  const tramOnset = tramH!=null ? tramH : 20;
+  const usaSunrise = albaH!=null && tramH!=null;
+
+  // T° notte (27-28): ore notturne nella finestra notte
+  const nv=[], gv=[];
+  for(let i=sliceNotte[0]; i<sliceNotte[1]; i++) {
+    if(tempHieri[i]==null) continue;
+    const ora=i%24;
+    if(ora<albaFineH||ora>=tramOnset) nv.push(tempHieri[i]);
+  }
+  // T° giorno (28): ore diurne nella finestra giorno
+  for(let i=sliceGiorno[0]; i<sliceGiorno[1]; i++) {
+    if(tempHieri[i]==null) continue;
+    const ora=i%24;
+    if(ora>=albaFineH&&ora<tramOnset) gv.push(tempHieri[i]);
+  }
+  const tNotte = nv.length ? Math.round(nv.reduce((a,b)=>a+b,0)/nv.length*10)/10 : null;
+  const tGiorno = gv.length ? Math.round(gv.reduce((a,b)=>a+b,0)/gv.length*10)/10 : null;
+  const tPesata = (tNotte!=null&&tGiorno!=null) ? Math.round((tNotte*0.6+tGiorno*0.4)*10)/10 : null;
+
+  // Temp media giorno 28
+  const tempIeriArr = tempHieri.slice(sliceGiorno[0],sliceGiorno[1]).filter(v=>v!=null);
   const tempIeri = tempIeriArr.length ? Math.round(tempIeriArr.reduce((a,b)=>a+b,0)/tempIeriArr.length*10)/10 : null;
 
-  // Umidità di ieri
-  const umH = d.hourly?.relative_humidity_2m||[];
-  const umIeriArr = umH.slice(sliceIeri[0], sliceIeri[1]).filter(v=>v!=null);
+  // Umidità media giorno 28
+  const umIeriArr = umH.slice(sliceGiorno[0],sliceGiorno[1]).filter(v=>v!=null);
   const umIeri = umIeriArr.length ? Math.round(umIeriArr.reduce((a,b)=>a+b,0)/umIeriArr.length) : null;
 
-  // Pressione di ieri + tendenza
-  const pressH = d.hourly?.surface_pressure||[];
-  const pressIeriArr = pressH.slice(sliceIeri[0], sliceIeri[1]).filter(v=>v!=null);
-  let pressioneIeri = null, tendenzaIeri = null;
+  // Pressione media + tendenza giorno 28
+  const pressIeriArr = pressH.slice(sliceGiorno[0],sliceGiorno[1]).filter(v=>v!=null);
+  let pressioneIeri=null, tendenzaIeri=null;
   if(pressIeriArr.length) {
-    pressioneIeri = Math.round(pressIeriArr.reduce((a,b)=>a+b,0)/pressIeriArr.length*10)/10;
-    const meta = Math.floor(pressIeriArr.length/2);
-    const p1 = pressIeriArr.slice(0,meta).reduce((a,b)=>a+b,0)/meta;
-    const p2 = pressIeriArr.slice(meta).reduce((a,b)=>a+b,0)/(pressIeriArr.length-meta);
-    tendenzaIeri = p2-p1>1.5?"salita":p2-p1<-1.5?"discesa":"stabile";
+    pressioneIeri=Math.round(pressIeriArr.reduce((a,b)=>a+b,0)/pressIeriArr.length*10)/10;
+    const meta=Math.floor(pressIeriArr.length/2);
+    const p1=pressIeriArr.slice(0,meta).reduce((a,b)=>a+b,0)/meta;
+    const p2=pressIeriArr.slice(meta).reduce((a,b)=>a+b,0)/(pressIeriArr.length-meta);
+    tendenzaIeri=p2-p1>1.5?"salita":p2-p1<-1.5?"discesa":"stabile";
   }
 
-  // T° notturna/diurna di ieri con alba/tramonto reali
-  
   return {
     temp: Math.round(d.current.temperature_2m*10)/10,
     um: d.current.relative_humidity_2m,
