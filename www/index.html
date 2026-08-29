@@ -1923,23 +1923,45 @@ async function verificaFav(id) {
   finally { if(btn){btn.disabled=false;btn.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l5 5L20 7"/></svg> Verifica';} }
 }
 
-function esportaPreferiti() {
+async function esportaPreferiti() {
   if(!favorites.length) { alert("Nessun preferito da esportare."); return; }
-  const data = {
-    versione: "1.0",
-    data: new Date().toISOString().slice(0,10),
-    preferiti: favorites
-  };
-  const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "funghi-radar-preferiti-"+new Date().toISOString().slice(0,10)+".json";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  showBackupMsg("✓ Esportati "+favorites.length+" luoghi");
+  const data = {versione:"1.0", data:new Date().toISOString().slice(0,10), preferiti:favorites};
+  const json = JSON.stringify(data, null, 2);
+  const fname = "funghi-radar-preferiti-"+new Date().toISOString().slice(0,10)+".json";
+  if(navigator.share && navigator.canShare) {
+    try {
+      const file = new File([json], fname, {type:"application/json"});
+      if(navigator.canShare({files:[file]})) {
+        await navigator.share({files:[file], title:"Funghi Radar Preferiti"});
+        showBackupMsg("Condiviso!");
+        return;
+      }
+    } catch(e) { if(e.name==="AbortError") return; }
+  }
+  if(navigator.share) {
+    try {
+      await navigator.share({title:"Funghi Radar Preferiti", text:json});
+      showBackupMsg("Condiviso!");
+      return;
+    } catch(e) { if(e.name==="AbortError") return; }
+  }
+  try {
+    const blob = new Blob([json], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href=url; a.download=fname;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showBackupMsg("Esportati "+favorites.length+" luoghi");
+  } catch(e) {
+    try {
+      await navigator.clipboard.writeText(json);
+      showBackupMsg("Copiato negli appunti!");
+    } catch(e2) {
+      alert("Copia questo testo e salvalo come .json");
+    }
+  }
 }
 
 function importaPreferiti(event) {
