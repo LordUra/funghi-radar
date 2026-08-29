@@ -966,7 +966,8 @@ function globalScore(t,u,q,soil,piogge={},spList) {
   if(tN2>=6&&tN2<=14) s+=30;
   else if(tEff2>=8&&tEff2<=18) s+=20;
   else if(tEff2>=5&&tEff2<=22) s+=10;
-  if(u>=70&&u<=90)s+=25; else if(u>=60)s+=12;
+  const uEff2=piogge?.umIeri??u;
+  if(uEff2>=70&&uEff2<=90)s+=25; else if(uEff2>=60)s+=12;
   if(q>=400&&q<=1400)s+=20; else if(q>=200)s+=10;
   if(soil.ph!=null&&soil.ph>=4.5&&soil.ph<=7)s+=10;
   // Piogge: fase nascita
@@ -1026,7 +1027,9 @@ function calcSpecie(t,u,q,soil,veg,month,piogge={}) {
     if(nOk&&gOk) score+=30;
     else if(nOk||gOk) score+=20;
     else if(tEff>=c.tempMin-3&&tEff<=c.tempMax+3) score+=12;
-    max+=20; if(u>=c.umMin&&u<=c.umMax)score+=20; else if(u>=c.umMin-10)score+=8;
+    // Usa umidità di ieri
+    const uEff=piogge.umIeri??u;
+    max+=20; if(uEff>=c.umMin&&uEff<=c.umMax)score+=20; else if(uEff>=c.umMin-10)score+=8;
     max+=15;
     if(q>=c.quotaMin&&q<=c.quotaMax) score+=15;
     else if(q>=c.quotaMin-200&&q<=c.quotaMax+200) score+=6;
@@ -1287,7 +1290,7 @@ async function getMeteo(lat,lon) {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`
     + `&current=temperature_2m,relative_humidity_2m,soil_moisture_0_to_1cm,surface_pressure`
     + `&current=soil_temperature_0cm,wind_speed_10m,cloud_cover`
-    + `&hourly=surface_pressure,temperature_2m,precipitation`
+    + `&hourly=surface_pressure,temperature_2m,precipitation,relative_humidity_2m`
     + `&daily=precipitation_sum,temperature_2m_max,temperature_2m_min,relative_humidity_2m_max,sunrise,sunset`
     + `&past_days=14&forecast_days=1`
     + `&timezone=auto`;
@@ -1380,6 +1383,35 @@ async function getMeteo(lat,lon) {
   const tPesata=(tNotte!=null&&tGiorno!=null)
     ? Math.round((tNotte*0.6+tGiorno*0.4)*10)/10 : null;
 
+  // Valori di IERI (24-48h fa) per il calcolo probabilità
+  // I funghi trovati oggi sono nati ieri notte — usiamo quelle condizioni
+  const nH2ieri = (d.hourly?.temperature_2m||[]).length;
+  const sliceIeri = [Math.max(0,nH2ieri-48), Math.max(0,nH2ieri-24)]; // ieri
+  
+  // Temperatura oraria di ieri
+  const tempHieri = d.hourly?.temperature_2m||[];
+  const tempIeriArr = tempHieri.slice(sliceIeri[0], sliceIeri[1]).filter(v=>v!=null);
+  const tempIeri = tempIeriArr.length ? Math.round(tempIeriArr.reduce((a,b)=>a+b,0)/tempIeriArr.length*10)/10 : null;
+
+  // Umidità di ieri
+  const umH = d.hourly?.relative_humidity_2m||[];
+  const umIeriArr = umH.slice(sliceIeri[0], sliceIeri[1]).filter(v=>v!=null);
+  const umIeri = umIeriArr.length ? Math.round(umIeriArr.reduce((a,b)=>a+b,0)/umIeriArr.length) : null;
+
+  // Pressione di ieri + tendenza
+  const pressH = d.hourly?.surface_pressure||[];
+  const pressIeriArr = pressH.slice(sliceIeri[0], sliceIeri[1]).filter(v=>v!=null);
+  let pressioneIeri = null, tendenzaIeri = null;
+  if(pressIeriArr.length) {
+    pressioneIeri = Math.round(pressIeriArr.reduce((a,b)=>a+b,0)/pressIeriArr.length*10)/10;
+    const meta = Math.floor(pressIeriArr.length/2);
+    const p1 = pressIeriArr.slice(0,meta).reduce((a,b)=>a+b,0)/meta;
+    const p2 = pressIeriArr.slice(meta).reduce((a,b)=>a+b,0)/(pressIeriArr.length-meta);
+    tendenzaIeri = p2-p1>1.5?"salita":p2-p1<-1.5?"discesa":"stabile";
+  }
+
+  // T° notturna/diurna di ieri con alba/tramonto reali
+  
   return {
     temp: Math.round(d.current.temperature_2m*10)/10,
     um: d.current.relative_humidity_2m,
@@ -1578,196 +1610,7 @@ async function getElevationMulti(lat, lon) {
   return Math.round(weightedAvg(valid.map(v=>v.v), valid.map(v=>v.w)));
 }
 
-async function getElevation(lat,lon) {
-  // Cascata di fonti, dalla più precisa alla meno precisa per l'Italia
-  const sources = [
-    // 1. EU-DEM 25m — dataset Copernicus specifico per Europa, il più preciso
-    `https://api.opentopodata.org/v1/eudem25m?locations=${lat},${lon}`,
-    // 2. SRTM 30m — buona copertura globale
-    `https://api.opentopodata.org/v1/srtm30m?locations=${lat},${lon}`,
-    // 3. Open-Elevation (SRTM)
-    `https://api.open-elevation.com/api/v1/lookup?locations=${lat},${lon}`,
-    // 4. Open-Meteo DEM (griglia 1km, meno preciso ma sempre disponibile)
-    `https://api.open-meteo.com/v1/elevation?latitude=${lat}&longitude=${lon}`,
-  ];
 
-  for(const url of sources) {
-    try {
-      const r = await fetch(url, {signal: AbortSignal.timeout(5000)});
-      if(!r.ok) continue;
-      const d = await r.json();
-      let elev = null;
-      // opentopodata e open-elevation: d.results[0].elevation
-      if(d?.results?.[0]?.elevation != null) elev = d.results[0].elevation;
-      // open-meteo: d.elevation (array o numero)
-      else if(d?.elevation != null) elev = Array.isArray(d.elevation) ? d.elevation[0] : d.elevation;
-      if(elev != null && elev > -500 && elev < 9000) return Math.round(elev);
-    } catch(e) { continue; }
-  }
-  return null;
-}
-
-
-async function getMeteo(lat,lon) {
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`
-    + `&current=temperature_2m,relative_humidity_2m,soil_moisture_0_to_1cm,surface_pressure`
-    + `&current=soil_temperature_0cm,wind_speed_10m,cloud_cover`
-    + `&hourly=surface_pressure,temperature_2m,precipitation`
-    + `&daily=precipitation_sum,temperature_2m_max,temperature_2m_min,relative_humidity_2m_max,sunrise,sunset`
-    + `&past_days=14&forecast_days=1`
-    + `&timezone=auto`;
-  const r=await fetch(url);
-  const d=await r.json();
-  const precip = d.daily?.precipitation_sum || [];
-  const tempMax = d.daily?.temperature_2m_max || [];
-  const tempMin = d.daily?.temperature_2m_min || [];
-  const umMax   = d.daily?.relative_humidity_2m_max || [];
-  const dates   = d.daily?.time || [];
-  // Somma precipitazioni su finestre diverse
-  const pioggia14 = precip.reduce((a,v)=>a+(v||0),0);          // ultimi 14gg
-  const pioggia10 = precip.slice(-10).reduce((a,v)=>a+(v||0),0); // ultimi 10gg
-  const pioggia3  = precip.slice(-3).reduce((a,v)=>a+(v||0),0);  // ultimi 3gg
-  let giorniSeccita = 0;
-  for(let i=precip.length-1;i>=0;i--){ if((precip[i]||0)<1) giorniSeccita++; else break; }
-  // Ultimi 7 giorni per il grafico (escludiamo oggi parziale)
-  // Prendi gli ultimi 7 giorni completi (escludi oggi che è parziale)
-  const nDays = dates.length;
-  const startIdx = Math.max(0, nDays - 8); // 7 giorni + escludi oggi
-  const endIdx = nDays - 1;
-  const giorni7 = dates.slice(startIdx, endIdx).map((date, i) => {
-    const idx = startIdx + i;
-    return {
-      date,
-      pioggia: Math.round((precip[idx]||0)*10)/10,
-      tMax: tempMax[idx]!=null ? Math.round(tempMax[idx]*10)/10 : null,
-      tMin: tempMin[idx]!=null ? Math.round(tempMin[idx]*10)/10 : null,
-      um: umMax[idx]!=null ? Math.round(umMax[idx]) : null,
-    };
-  });
-  // Tendenza pressione: confronta media ultime 3h con media 3-6h fa
-  const pressureHourly = d.hourly?.surface_pressure || [];
-  const nH = pressureHourly.length;
-  const pressNow = nH>=3 ? pressureHourly.slice(-3).reduce((a,v)=>a+(v||0),0)/3 : null;
-  const pressPrev = nH>=6 ? pressureHourly.slice(-6,-3).reduce((a,v)=>a+(v||0),0)/3 : null;
-  const pressione = d.current?.surface_pressure ?? pressNow;
-  let tendenzaPressione = null; // "salita", "stabile", "discesa"
-  if(pressNow!=null && pressPrev!=null) {
-    const delta = pressNow - pressPrev;
-    if(delta > 1.5) tendenzaPressione = "salita";
-    else if(delta < -1.5) tendenzaPressione = "discesa";
-    else tendenzaPressione = "stabile";
-  }
-  const tMax0 = d.daily?.temperature_2m_max?.[d.daily.temperature_2m_max.length-1];
-  const tMin0 = d.daily?.temperature_2m_min?.[d.daily.temperature_2m_min.length-1];
-  const escursione = (tMax0!=null && tMin0!=null) ? Math.round((tMax0-tMin0)*10)/10 : null;
-  // Analisi piogge orarie
-  const pH=d.hourly?.precipitation||[], p24=pH.slice(-24);
-  const mmN=p24.filter((_,i)=>{const o=i%24;return o>=22||o<=6;}).reduce((a,v)=>a+(v||0),0);
-  const mmP=p24.filter((_,i)=>{const o=i%24;return o>=12&&o<=18;}).reduce((a,v)=>a+(v||0),0);
-  const mmM=p24.filter((_,i)=>{const o=i%24;return o>=6&&o<12;}).reduce((a,v)=>a+(v||0),0);
-  const mmU24=p24.reduce((a,v)=>a+(v||0),0);
-  let ore=0; for(let i=pH.length-1;i>=0;i--){if((pH[i]||0)>=0.5)break;ore++;}
-  const qualitaPioggia=mmN>mmP?"notturna":mmM>mmP?"mattutina":mmP>1?"pomeridiana":"assente";
-  const faseNascita=ore<24?"troppo_recente":ore<48?"fase_attesa":ore<120?"fase_ottimale":ore<240?"fase_tardiva":"troppo_secco";
-
-  // T° notturna (tramonto → alba+1h) peso 60%, diurna (alba+1h → tramonto) peso 40%
-  // Usa sunrise/sunset reali da Open-Meteo per le coordinate e la data
-  const tempH=d.hourly?.temperature_2m||[], nH2=tempH.length;
-  const hourlyTimes=d.hourly?.time||[];
-  // Prendi sunrise/sunset di ieri e oggi (ultimi 2 giorni)
-  const sunrises=d.daily?.sunrise||[], sunsets=d.daily?.sunset||[];
-  let tNotte=null, tGiorno=null;
-  if(nH2>=24 && sunrises.length>=1 && sunsets.length>=1) {
-    // Tramonto di ieri e alba di oggi
-    const sunsetYest = sunsets.length>=2 ? new Date(sunsets[sunsets.length-2]) : null;
-    const sunriseToday = new Date(sunrises[sunrises.length-1]);
-    const sunsetToday = new Date(sunsets[sunsets.length-1]);
-    const albaFine = new Date(sunriseToday.getTime() + 60*60*1000); // alba+1h
-    const nv=[], gv=[];
-    for(let i=nH2-24; i<nH2; i++) {
-      if(tempH[i]==null || !hourlyTimes[i]) continue;
-      const t=new Date(hourlyTimes[i]);
-      // Notturno: da tramonto di ieri a alba+1h di oggi, OPPURE da tramonto di oggi in poi
-      const isNotte = (sunsetYest && t>=sunsetYest && t<albaFine) || t>=sunsetToday;
-      if(isNotte) nv.push(tempH[i]);
-      else gv.push(tempH[i]);
-    }
-    if(nv.length) tNotte=Math.round(nv.reduce((a,b)=>a+b,0)/nv.length*10)/10;
-    if(gv.length) tGiorno=Math.round(gv.reduce((a,b)=>a+b,0)/gv.length*10)/10;
-  }
-  // Fallback se sunrise/sunset non disponibili
-  if(tNotte==null && nH2>=24) {
-    const nv=[], gv=[];
-    for(let i=nH2-24;i<nH2;i++){const o=i%24;if([22,23,0,1,2,3,4,5,6].includes(o)&&tempH[i]!=null)nv.push(tempH[i]);else if(o>=7&&o<=21&&tempH[i]!=null)gv.push(tempH[i]);}
-    if(nv.length)tNotte=Math.round(nv.reduce((a,b)=>a+b,0)/nv.length*10)/10;
-    if(gv.length)tGiorno=Math.round(gv.reduce((a,b)=>a+b,0)/gv.length*10)/10;
-  }
-  const tPesata=(tNotte!=null&&tGiorno!=null)
-    ? Math.round((tNotte*0.6+tGiorno*0.4)*10)/10 : null;
-
-  return {
-    temp: Math.round(d.current.temperature_2m*10)/10,
-    um: d.current.relative_humidity_2m,
-    soilMoist: d.current.soil_moisture_0_to_1cm!=null ? Math.round(d.current.soil_moisture_0_to_1cm*100) : null,
-    pioggia14: Math.round(pioggia14*10)/10,
-    pioggia10: Math.round(pioggia10*10)/10,
-    pioggia3:  Math.round(pioggia3*10)/10,
-    giorniSeccita,
-    giorni7,
-    pressione: pressione!=null ? Math.round(pressione*10)/10 : null,
-    tendenzaPressione,
-    tSuolo: d.current?.soil_temperature_0cm!=null ? Math.round(d.current.soil_temperature_0cm*10)/10 : null,
-    vento: d.current?.wind_speed_10m!=null ? Math.round(d.current.wind_speed_10m) : null,
-    nuvolosita: d.current?.cloud_cover!=null ? Math.round(d.current.cloud_cover) : null,
-    escursione,
-    tMax: tMax0!=null ? Math.round(tMax0*10)/10 : null,
-    tMin: tMin0!=null ? Math.round(tMin0*10)/10 : null,
-    tNotte, tGiorno, tPesata,
-    faseNascita, qualitaPioggia, mmUltimi24h:mmU24,
-  };
-}
-
-async function getSoil(lat,lon) {
-  try {
-    // OpenLandMap: pH, carbonio organico, sabbia/argilla — molto più veloce di SoilGrids
-    const base = "https://api.openlandmap.org/query/point";
-    const params = `lat=${lat}&lon=${lon}&properties=sol_ph.h2o_usda.4c1a2a_m,sol_organic.carbon_usda.6a1c_m,sol_texture.class_usda.tt_m&depth=0-10cm&stats=mean`;
-    const ctrl = new AbortController();
-    const tid = setTimeout(()=>ctrl.abort(), 6000);
-    const r = await fetch(`${base}?${params}`, {signal: ctrl.signal});
-    clearTimeout(tid);
-    if(!r.ok) throw new Error("OpenLandMap HTTP "+r.status);
-    const d = await r.json();
-    const props = d?.properties;
-    if(!props) throw new Error("no props");
-
-    // pH: valore diretto (es. 6.2)
-    const phRaw = props["sol_ph.h2o_usda.4c1a2a_m"]?.["0-10cm"]?.mean;
-    const ph = phRaw!=null ? Math.round(phRaw*10)/10 : null;
-
-    // Carbonio organico in g/kg → % sostanza organica (×1.72 per humus)
-    const socRaw = props["sol_organic.carbon_usda.6a1c_m"]?.["0-10cm"]?.mean;
-    const org = socRaw!=null ? Math.round(socRaw/10*1.72*10)/10 : null;
-
-    // Texture class: sandy, loamy, clay, silty, etc.
-    const texRaw = props["sol_texture.class_usda.tt_m"]?.["0-10cm"]?.mean;
-    let tipo = null;
-    if(texRaw!=null){
-      const t = Math.round(texRaw);
-      // USDA texture classes 1-12
-      if(t<=3) tipo="sabbioso";
-      else if(t<=5) tipo="franco";
-      else if(t<=8) tipo="limoso";
-      else if(t<=10) tipo="argilloso";
-      else tipo="franco";
-    }
-
-    return { ph: null, org, tipo, source:"OpenLandMap" }; // pH da vegetazione
-  } catch(e) {
-    // Secondo fallback: stima euristica da quota e vegetazione
-    return estimateSoilFromContext(lat, lon);
-  }
-}
 
 function estimateSoilFromContext(lat, lon) {
   // Stima statistica per l'Italia centrale basata su coordinate
@@ -1782,43 +1625,7 @@ function estimateSoilFromContext(lat, lon) {
   return { ph: null, org: Math.round(org*10)/10, tipo, source:"Stima locale" }; // pH da vegetazione
 }
 
-async function reverseGeocode(lat,lon) {
-  try {
-    const ctrl = new AbortController();
-    const tid = setTimeout(()=>ctrl.abort(), 5000);
-    // zoom=18 = massima precisione (strada/edificio)
-    const r = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&zoom=18&addressdetails=1`,
-      {signal: ctrl.signal}
-    );
-    clearTimeout(tid);
-    const d = await r.json();
-    const a = d.address;
 
-    // Cerca prima nome del bosco/parco/area naturale nel display_name di OSM
-    // Nominatim mette il nome del POI più vicino come primo elemento del display_name
-    const displayParts = (d.display_name||"").split(", ");
-    const firstPart = displayParts[0]||"";
-
-    // Parole chiave che indicano un'area naturale rilevante per i funghi
-    const keywords = ["bosco","foresta","pineta","parco","riserva","oasi","macchia","selva","faggeta","castagneto","querceto","naturalista","monte","colle","lago","valle","area"];
-    const isNatural = keywords.some(k => firstPart.toLowerCase().includes(k));
-    const nomeNaturale = isNatural ? firstPart : null;
-
-    // Gerarchia per nome del luogo abitato
-    const frazione = a.suburb||a.quarter||a.hamlet||a.village;
-    const comune = a.city||a.town||a.municipality;
-    const localita = frazione||(comune||a.county||a.state||"zona");
-
-    // Combina: se c'è un bosco noto, mostralo con il comune
-    if(nomeNaturale && comune) return nomeNaturale+" - "+comune;
-    if(nomeNaturale) return nomeNaturale;
-    if(frazione && comune && frazione !== comune) return frazione+" ("+comune+")";
-    return localita;
-  } catch(e) { return "zona"; }
-}
-
-// ─── RENDER ──────────────────────────────────────────────────────────────────
 function setStatus(msg, show=true, id="status") {
   const el=document.getElementById(id);
   el.style.display=show?"flex":"none";
@@ -1923,45 +1730,38 @@ async function verificaFav(id) {
   finally { if(btn){btn.disabled=false;btn.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l5 5L20 7"/></svg> Verifica';} }
 }
 
-async function esportaPreferiti() {
+function esportaPreferiti() {
   if(!favorites.length) { alert("Nessun preferito da esportare."); return; }
   const data = {versione:"1.0", data:new Date().toISOString().slice(0,10), preferiti:favorites};
   const json = JSON.stringify(data, null, 2);
-  const fname = "funghi-radar-preferiti-"+new Date().toISOString().slice(0,10)+".json";
-  if(navigator.share && navigator.canShare) {
-    try {
-      const file = new File([json], fname, {type:"application/json"});
-      if(navigator.canShare({files:[file]})) {
-        await navigator.share({files:[file], title:"Funghi Radar Preferiti"});
-        showBackupMsg("Condiviso!");
-        return;
-      }
-    } catch(e) { if(e.name==="AbortError") return; }
-  }
-  if(navigator.share) {
-    try {
-      await navigator.share({title:"Funghi Radar Preferiti", text:json});
-      showBackupMsg("Condiviso!");
-      return;
-    } catch(e) { if(e.name==="AbortError") return; }
-  }
-  try {
-    const blob = new Blob([json], {type:"application/json"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href=url; a.download=fname;
-    document.body.appendChild(a); a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    showBackupMsg("Esportati "+favorites.length+" luoghi");
-  } catch(e) {
-    try {
-      await navigator.clipboard.writeText(json);
-      showBackupMsg("Copiato negli appunti!");
-    } catch(e2) {
-      alert("Copia questo testo e salvalo come .json");
-    }
-  }
+  // Mostra popup con JSON copiabile — unico metodo affidabile su Capacitor/Android
+  const old = document.getElementById("export-popup");
+  if(old) old.remove();
+  const div = document.createElement("div");
+  div.id = "export-popup";
+  div.style.cssText = "position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.75);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem";
+  div.innerHTML = `<div style="background:#fff;border-radius:12px;padding:1.25rem;width:100%;max-width:480px;max-height:85vh;display:flex;flex-direction:column;gap:10px">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <b style="font-size:14px;color:#1a3a1a">Backup preferiti (${favorites.length} luoghi)</b>
+      <button onclick="document.getElementById('export-popup').remove()" style="border:none;background:none;font-size:22px;cursor:pointer;color:#888;line-height:1">x</button>
+    </div>
+    <p style="font-size:12px;color:#666;margin:0">Premi il pulsante verde per copiare, poi incolla in un'email o in un file di testo.</p>
+    <textarea id="export-json" style="flex:1;height:180px;font-size:10px;font-family:monospace;border:1px solid #ccc;border-radius:8px;padding:8px;resize:none;color:#333">${json.replace(/</g,'&lt;')}</textarea>
+    <button id="copy-btn" onclick="
+      var ta=document.getElementById('export-json');
+      ta.select();
+      ta.setSelectionRange(0,99999);
+      try{navigator.clipboard.writeText(ta.value).then(function(){document.getElementById('copy-btn').textContent='Copiato!';document.getElementById('copy-btn').style.background='#4a8c4a';});}
+      catch(e){document.execCommand('copy');document.getElementById('copy-btn').textContent='Copiato!';document.getElementById('copy-btn').style.background='#4a8c4a';}
+    " style="background:#2d5a2d;color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;cursor:pointer;font-weight:500">
+      Copia negli appunti
+    </button>
+  </div>`;
+  document.body.appendChild(div);
+  setTimeout(function(){
+    var ta=document.getElementById('export-json');
+    if(ta){ta.select();ta.setSelectionRange(0,99999);}
+  },200);
 }
 
 function importaPreferiti(event) {
@@ -2130,6 +1930,12 @@ function renderExtra(extra) {
     const qOk=state.piogge.qualitaPioggia==="notturna"||state.piogge.qualitaPioggia==="mattutina";
     items.push({l:"Tipo pioggia",v:state.piogge.qualitaPioggia,ok:qOk});
   }
+  if(state.piogge?.faseNascita) {
+    const fL={troppo_recente:"Troppo recente",fase_attesa:"In attesa",fase_ottimale:"Fase ottimale",fase_tardiva:"Fase tardiva",troppo_secco:"Troppo secco"};
+    const fO={fase_ottimale:true,fase_tardiva:null,troppo_recente:false,fase_attesa:null,troppo_secco:false};
+    const f=state.piogge.faseNascita;
+    items.push({l:"Fase nascita", v:fL[f]||f, ok:fO[f]??null});
+  }
   if(!items.length) { el.style.display="none"; return; }
   el.style.display="grid";
   el.innerHTML = items.map(i=>`
@@ -2142,8 +1948,8 @@ function renderExtra(extra) {
 function renderPressione(pressione) {
   const el = document.getElementById("v-press");
   if(!el || !pressione) return;
-  const v = pressione.valore;
-  const t = pressione.tendenza;
+  const v = state.piogge?.pressioneIeri ?? pressione.valore;
+  const t = state.piogge?.tendenzaIeri ?? pressione.tendenza;
   const arrow = t==="salita" ? " ↑" : t==="discesa" ? " ↓" : " →";
   const color = t==="discesa" ? "var(--green-mid)" : t==="salita" ? "#c8820a" : "var(--text)";
   el.innerHTML = v!=null
