@@ -1915,16 +1915,6 @@ function renderExtra(extra) {
     const fL={troppo_recente:"Troppo recente ⏳",fase_attesa:"In attesa 🕐",fase_ottimale:"Fase ottimale ✓",fase_tardiva:"Fase tardiva ~",troppo_secco:"Troppo secco ✗"};
     const fO={fase_ottimale:true,fase_tardiva:null,troppo_recente:false,fase_attesa:null,troppo_secco:false};
     const f=state.piogge.faseNascita;
-    items.push({l:"Fase nascita",v:fL[f]||f,ok:fO[f]??null});
-  }
-  if(state.piogge?.qualitaPioggia&&state.piogge.qualitaPioggia!=="assente") {
-    const qOk=state.piogge.qualitaPioggia==="notturna"||state.piogge.qualitaPioggia==="mattutina";
-    items.push({l:"Tipo pioggia",v:state.piogge.qualitaPioggia,ok:qOk});
-  }
-  if(state.piogge?.faseNascita) {
-    const fL={troppo_recente:"Troppo recente",fase_attesa:"In attesa",fase_ottimale:"Fase ottimale",fase_tardiva:"Fase tardiva",troppo_secco:"Troppo secco"};
-    const fO={fase_ottimale:true,fase_tardiva:null,troppo_recente:false,fase_attesa:null,troppo_secco:false};
-    const f=state.piogge.faseNascita;
     items.push({l:"Fase nascita", v:fL[f]||f, ok:fO[f]??null});
   }
   if(!items.length) { el.style.display="none"; return; }
