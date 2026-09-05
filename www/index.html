@@ -1216,12 +1216,19 @@ async function getMeteoMulti(lat, lon) {
     escursione: valid[0].escursione,
     tMax: valid[0].tMax,
     tMin: valid[0].tMin,
-    tNotte: valid[0].tNotte??null,
-    tGiorno: valid[0].tGiorno??null,
-    tPesata: valid[0].tPesata??null,
-    faseNascita: valid[0].faseNascita??null,
-    qualitaPioggia: valid[0].qualitaPioggia??null,
-    mmUltimi24h: valid[0].mmUltimi24h??0,
+    tNotte: valid.find(v=>v.tNotte!=null)?.tNotte??null,
+    tGiorno: valid.find(v=>v.tGiorno!=null)?.tGiorno??null,
+    tPesata: valid.find(v=>v.tPesata!=null)?.tPesata??null,
+    usaSunrise: valid.find(v=>v.usaSunrise)?.usaSunrise??false,
+    albaH: valid.find(v=>v.albaH!=null)?.albaH??null,
+    tramH: valid.find(v=>v.tramH!=null)?.tramH??null,
+    tempIeri: valid.find(v=>v.tempIeri!=null)?.tempIeri??null,
+    umIeri: valid.find(v=>v.umIeri!=null)?.umIeri??null,
+    pressioneIeri: valid.find(v=>v.pressioneIeri!=null)?.pressioneIeri??null,
+    tendenzaIeri: valid.find(v=>v.tendenzaIeri!=null)?.tendenzaIeri??null,
+    faseNascita: valid.find(v=>v.faseNascita!=null)?.faseNascita??null,
+    qualitaPioggia: valid.find(v=>v.qualitaPioggia!=null)?.qualitaPioggia??null,
+    mmUltimi24h: valid.find(v=>v.mmUltimi24h!=null)?.mmUltimi24h??0,
   };
 }
 
@@ -1420,7 +1427,8 @@ async function getMeteo(lat,lon) {
     escursione,
     tMax: tMax0!=null ? Math.round(tMax0*10)/10 : null,
     tMin: tMin0!=null ? Math.round(tMin0*10)/10 : null,
-    tNotte, tGiorno, tPesata,
+    tNotte, tGiorno, tPesata, usaSunrise, albaH, tramH,
+    tempIeri, umIeri, pressioneIeri, tendenzaIeri,
     faseNascita, qualitaPioggia, mmUltimi24h:mmU24,
   };
 }
@@ -1561,12 +1569,19 @@ async function getMeteoMulti(lat, lon) {
     escursione: valid[0].escursione,
     tMax: valid[0].tMax,
     tMin: valid[0].tMin,
-    tNotte: valid[0].tNotte??null,
-    tGiorno: valid[0].tGiorno??null,
-    tPesata: valid[0].tPesata??null,
-    faseNascita: valid[0].faseNascita??null,
-    qualitaPioggia: valid[0].qualitaPioggia??null,
-    mmUltimi24h: valid[0].mmUltimi24h??0,
+    tNotte: valid.find(v=>v.tNotte!=null)?.tNotte??null,
+    tGiorno: valid.find(v=>v.tGiorno!=null)?.tGiorno??null,
+    tPesata: valid.find(v=>v.tPesata!=null)?.tPesata??null,
+    usaSunrise: valid.find(v=>v.usaSunrise)?.usaSunrise??false,
+    albaH: valid.find(v=>v.albaH!=null)?.albaH??null,
+    tramH: valid.find(v=>v.tramH!=null)?.tramH??null,
+    tempIeri: valid.find(v=>v.tempIeri!=null)?.tempIeri??null,
+    umIeri: valid.find(v=>v.umIeri!=null)?.umIeri??null,
+    pressioneIeri: valid.find(v=>v.pressioneIeri!=null)?.pressioneIeri??null,
+    tendenzaIeri: valid.find(v=>v.tendenzaIeri!=null)?.tendenzaIeri??null,
+    faseNascita: valid.find(v=>v.faseNascita!=null)?.faseNascita??null,
+    qualitaPioggia: valid.find(v=>v.qualitaPioggia!=null)?.qualitaPioggia??null,
+    mmUltimi24h: valid.find(v=>v.mmUltimi24h!=null)?.mmUltimi24h??0,
   };
 }
 
@@ -1700,6 +1715,9 @@ async function verificaFav(id) {
       pioggia3:m.pioggia3||0, giorniSeccita:m.giorniSeccita??0,
       pressione:{valore:m.pressione??null,tendenza:m.tendenzaPressione??null},
       tNotte:m.tNotte??null, tGiorno:m.tGiorno??null, tPesata:m.tPesata??null,
+      usaSunrise:m.usaSunrise??false, albaH:m.albaH??null, tramH:m.tramH??null,
+      tempIeri:m.tempIeri??null, umIeri:m.umIeri??null,
+      pressioneIeri:m.pressioneIeri??null, tendenzaIeri:m.tendenzaIeri??null,
       faseNascita:m.faseNascita??null, qualitaPioggia:m.qualitaPioggia??null,
       mmUltimi24h:m.mmUltimi24h||0,
     };
@@ -2275,7 +2293,7 @@ async function analyzeCoords() {
   const meteoVal = (meteoRes.status==="fulfilled" && meteoRes.value) ? meteoRes.value : null;
   if(meteoVal) {
     temp=meteoVal.temp||15; um=meteoVal.um||65; soilMoist=meteoVal.soilMoist||null;
-    state.piogge={pioggia14:meteoVal.pioggia14||0,pioggia10:meteoVal.pioggia10||0,pioggia3:meteoVal.pioggia3||0,giorniSeccita:meteoVal.giorniSeccita||0,pressione:{valore:meteoVal.pressione,tendenza:meteoVal.tendenzaPressione},tNotte:meteoVal.tNotte??null,tGiorno:meteoVal.tGiorno??null,tPesata:meteoVal.tPesata??null,faseNascita:meteoVal.faseNascita??null,qualitaPioggia:meteoVal.qualitaPioggia??null,mmUltimi24h:meteoVal.mmUltimi24h||0};
+    state.piogge={pioggia14:meteoVal.pioggia14||0,pioggia10:meteoVal.pioggia10||0,pioggia3:meteoVal.pioggia3||0,giorniSeccita:meteoVal.giorniSeccita||0,pressione:{valore:meteoVal.pressione,tendenza:meteoVal.tendenzaPressione},tNotte:meteoVal.tNotte??null,tGiorno:meteoVal.tGiorno??null,tPesata:meteoVal.tPesata??null,usaSunrise:meteoVal.usaSunrise??false,albaH:meteoVal.albaH??null,tramH:meteoVal.tramH??null,tempIeri:meteoVal.tempIeri??null,umIeri:meteoVal.umIeri??null,pressioneIeri:meteoVal.pressioneIeri??null,tendenzaIeri:meteoVal.tendenzaIeri??null,faseNascita:meteoVal.faseNascita??null,qualitaPioggia:meteoVal.qualitaPioggia??null,mmUltimi24h:meteoVal.mmUltimi24h||0};
     state.pressione={valore:meteoVal.pressione,tendenza:meteoVal.tendenzaPressione};
     state.extra={tSuolo:meteoVal.tSuolo,vento:meteoVal.vento,nuvolosita:meteoVal.nuvolosita,escursione:meteoVal.escursione,tMax:meteoVal.tMax,tMin:meteoVal.tMin};
     state.giorni7=meteoVal.giorni7||[];
