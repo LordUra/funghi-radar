@@ -24,11 +24,26 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Setup Android SDK manually
+        run: |
+          # Usa l'SDK già presente nel runner ubuntu-latest
+          echo "ANDROID_HOME=/usr/local/lib/android/sdk" >> $GITHUB_ENV
+          echo "ANDROID_SDK_ROOT=/usr/local/lib/android/sdk" >> $GITHUB_ENV
+          echo "/usr/local/lib/android/sdk/platform-tools" >> $GITHUB_PATH
+          echo "/usr/local/lib/android/sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
 
-      - name: Accept Android SDK licenses
-        run: yes | ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          # Accetta tutte le licenze senza prompt
+          mkdir -p /usr/local/lib/android/sdk/licenses
+          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > /usr/local/lib/android/sdk/licenses/android-sdk-license
+          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> /usr/local/lib/android/sdk/licenses/android-sdk-license
+          echo "24333f8a63b6825ea9c5514f83c2829b004d1fee" >> /usr/local/lib/android/sdk/licenses/android-sdk-license
+          echo "84831b9409646a918e30573bab4c9c91346d8abd" > /usr/local/lib/android/sdk/licenses/android-sdk-preview-license
+
+          # Installa platform-tools e build-tools se non presenti
+          yes | /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager \
+            "platform-tools" \
+            "platforms;android-34" \
+            "build-tools;34.0.0" || true
 
       - name: Install dependencies
         run: npm install
@@ -95,15 +110,14 @@ jobs:
 
       - name: Sign and align APK
         run: |
+          BUILD_TOOLS=$(ls ${ANDROID_HOME}/build-tools/ | sort -V | tail -1)
           APK=android/app/build/outputs/apk/release/app-release-unsigned.apk
           ALIGNED=android/app/build/outputs/apk/release/funghi-radar-aligned.apk
           SIGNED=android/app/build/outputs/apk/release/funghi-radar-release.apk
 
-          ${ANDROID_HOME}/build-tools/$(ls ${ANDROID_HOME}/build-tools/ | sort -V | tail -1)/zipalign \
-            -v 4 $APK $ALIGNED
+          ${ANDROID_HOME}/build-tools/${BUILD_TOOLS}/zipalign -v 4 $APK $ALIGNED
 
-          ${ANDROID_HOME}/build-tools/$(ls ${ANDROID_HOME}/build-tools/ | sort -V | tail -1)/apksigner \
-            sign \
+          ${ANDROID_HOME}/build-tools/${BUILD_TOOLS}/apksigner sign \
             --ks funghi-radar.keystore \
             --ks-alias funghi-radar \
             --ks-pass pass:funghiRadar2026 \
