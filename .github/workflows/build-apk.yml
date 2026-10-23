@@ -122,7 +122,7 @@ jobs:
 
           ${ANDROID_HOME}/build-tools/${BUILD_TOOLS}/apksigner sign \
             --ks funghi-radar.keystore \
-            --ks-alias funghi-radar \
+            --ks-key-alias funghi-radar \
             --ks-pass pass:funghiRadar2026 \
             --key-pass pass:funghiRadar2026 \
             --out $SIGNED \
