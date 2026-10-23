@@ -1787,37 +1787,88 @@ async function verificaFav(id) {
 }
 
 function esportaPreferiti() {
-  if(!favorites.length) { alert("Nessun preferito da esportare."); return; }
-  const data = {versione:"1.0", data:new Date().toISOString().slice(0,10), preferiti:favorites};
-  const json = JSON.stringify(data, null, 2);
-  // Mostra popup con JSON copiabile — unico metodo affidabile su Capacitor/Android
-  const old = document.getElementById("export-popup");
+  const old = document.getElementById("backup-popup");
   if(old) old.remove();
+  const data = {versione:"1.0", data:new Date().toISOString().slice(0,10), preferiti:favorites};
+  const json = favorites.length ? JSON.stringify(data, null, 2) : "";
   const div = document.createElement("div");
-  div.id = "export-popup";
+  div.id = "backup-popup";
   div.style.cssText = "position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.75);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem";
-  div.innerHTML = `<div style="background:#fff;border-radius:12px;padding:1.25rem;width:100%;max-width:480px;max-height:85vh;display:flex;flex-direction:column;gap:10px">
+  div.innerHTML = `<div style="background:#fff;border-radius:12px;padding:1.25rem;width:100%;max-width:480px;max-height:90vh;display:flex;flex-direction:column;gap:10px">
     <div style="display:flex;justify-content:space-between;align-items:center">
-      <b style="font-size:14px;color:#1a3a1a">Backup preferiti (${favorites.length} luoghi)</b>
-      <button onclick="document.getElementById('export-popup').remove()" style="border:none;background:none;font-size:22px;cursor:pointer;color:#888;line-height:1">x</button>
+      <b style="font-size:15px;color:#1a3a1a">💾 Backup preferiti</b>
+      <button onclick="document.getElementById('backup-popup').remove()" style="border:none;background:none;font-size:24px;cursor:pointer;color:#888;line-height:1">&times;</button>
     </div>
-    <p style="font-size:12px;color:#666;margin:0">Premi il pulsante verde per copiare, poi incolla in un'email o in un file di testo.</p>
-    <textarea id="export-json" style="flex:1;height:180px;font-size:10px;font-family:monospace;border:1px solid #ccc;border-radius:8px;padding:8px;resize:none;color:#333">${json.replace(/</g,'&lt;')}</textarea>
-    <button id="copy-btn" onclick="
-      var ta=document.getElementById('export-json');
-      ta.select();
-      ta.setSelectionRange(0,99999);
-      try{navigator.clipboard.writeText(ta.value).then(function(){document.getElementById('copy-btn').textContent='Copiato!';document.getElementById('copy-btn').style.background='#4a8c4a';});}
-      catch(e){document.execCommand('copy');document.getElementById('copy-btn').textContent='Copiato!';document.getElementById('copy-btn').style.background='#4a8c4a';}
-    " style="background:#2d5a2d;color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;cursor:pointer;font-weight:500">
-      Copia negli appunti
-    </button>
+    <div style="display:flex;gap:8px;border-bottom:2px solid #e8f0e8;padding-bottom:4px">
+      <button id="tab-esp" onclick="switchBackupTab('esporta')" style="flex:1;padding:8px;border:none;border-radius:8px 8px 0 0;background:#2d5a2d;color:#fff;font-size:13px;font-weight:600;cursor:pointer">Esporta</button>
+      <button id="tab-imp" onclick="switchBackupTab('importa')" style="flex:1;padding:8px;border:none;border-radius:8px 8px 0 0;background:#e8f0e8;color:#2d5a2d;font-size:13px;font-weight:600;cursor:pointer">Importa</button>
+    </div>
+    <div id="pane-esporta" style="display:flex;flex-direction:column;gap:8px">
+      ${favorites.length ? '' : '<p style="font-size:12px;color:#c44;margin:0">Nessun preferito salvato.</p>'}
+      ${favorites.length ? '<p style="font-size:12px;color:#666;margin:0">Copia il testo qui sotto e salvalo (email, note, file). Potrai reincollarlo per ripristinare i preferiti.</p>' : ''}
+      ${favorites.length ? '<textarea id="export-json" style="height:160px;font-size:10px;font-family:monospace;border:1px solid #ccc;border-radius:8px;padding:8px;resize:none;color:#333;width:100%;box-sizing:border-box">'+json.replace(/</g,'&lt;')+'</textarea>' : ''}
+      ${favorites.length ? '<button id="copy-btn" onclick="copiaExportJson()" style="background:#2d5a2d;color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;cursor:pointer;font-weight:500">Copia negli appunti</button>' : ''}
+    </div>
+    <div id="pane-importa" style="display:none;flex-direction:column;gap:8px">
+      <p style="font-size:12px;color:#666;margin:0">Incolla qui il testo copiato in precedenza con Esporta. I preferiti già presenti non verranno duplicati.</p>
+      <textarea id="import-json" placeholder="Incolla qui il JSON dei preferiti..." style="height:180px;font-size:10px;font-family:monospace;border:1px solid #ccc;border-radius:8px;padding:8px;resize:none;color:#333;width:100%;box-sizing:border-box"></textarea>
+      <button onclick="importaDaPopup()" style="background:#2d5a2d;color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;cursor:pointer;font-weight:500">Importa preferiti</button>
+    </div>
   </div>`;
   document.body.appendChild(div);
-  setTimeout(function(){
-    var ta=document.getElementById('export-json');
-    if(ta){ta.select();ta.setSelectionRange(0,99999);}
-  },200);
+  if(favorites.length) {
+    setTimeout(function(){ var ta=document.getElementById('export-json'); if(ta){ta.select();ta.setSelectionRange(0,99999);} },200);
+  } else {
+    switchBackupTab('importa');
+  }
+}
+
+function copiaExportJson() {
+  var ta = document.getElementById('export-json');
+  if(!ta) return;
+  ta.select(); ta.setSelectionRange(0,99999);
+  try {
+    navigator.clipboard.writeText(ta.value).then(function(){
+      var b = document.getElementById('copy-btn');
+      b.textContent = '✓ Copiato!'; b.style.background = '#4a8c4a';
+    });
+  } catch(e) {
+    document.execCommand('copy');
+    var b = document.getElementById('copy-btn');
+    b.textContent = '✓ Copiato!'; b.style.background = '#4a8c4a';
+  }
+}
+
+function switchBackupTab(tab) {
+  document.getElementById('pane-esporta').style.display = tab==='esporta'?'flex':'none';
+  document.getElementById('pane-importa').style.display = tab==='importa'?'flex':'none';
+  document.getElementById('tab-esp').style.background = tab==='esporta'?'#2d5a2d':'#e8f0e8';
+  document.getElementById('tab-esp').style.color = tab==='esporta'?'#fff':'#2d5a2d';
+  document.getElementById('tab-imp').style.background = tab==='importa'?'#2d5a2d':'#e8f0e8';
+  document.getElementById('tab-imp').style.color = tab==='importa'?'#fff':'#2d5a2d';
+}
+
+function importaDaPopup() {
+  const ta = document.getElementById('import-json');
+  if(!ta || !ta.value.trim()) { alert("Incolla prima il JSON da importare."); return; }
+  try {
+    const data = JSON.parse(ta.value.trim());
+    const imported = Array.isArray(data) ? data : (data.preferiti || []);
+    if(!imported.length) { alert("Nessun preferito trovato nel testo incollato."); return; }
+    let aggiunti=0, saltati=0;
+    imported.forEach(fav => {
+      const exists = favorites.some(f => Math.abs(f.lat-fav.lat)<0.0001 && Math.abs(f.lon-fav.lon)<0.0001);
+      if(!exists) {
+        favorites.push({...fav, id:Date.now()+Math.random(), lastScore:null, lastCls:null, lastLabel:null, lastSpecie:null});
+        aggiunti++;
+      } else saltati++;
+    });
+    saveFavs(); renderFavList(); updateFavBadge();
+    document.getElementById('backup-popup').remove();
+    showBackupMsg("✓ Importati "+aggiunti+(saltati?" ("+saltati+" già presenti)":""));
+  } catch(e) {
+    alert("Testo non valido. Assicurati di incollare il JSON copiato con Esporta.");
+  }
 }
 
 function importaPreferiti(event) {
@@ -1954,11 +2005,19 @@ function renderExtra(extra) {
   const items = [];
   if(state.piogge?.tNotte!=null) {
     const ok=state.piogge.tNotte>=6&&state.piogge.tNotte<=14;
-    items.push({l:"T° notte (22-6)", v:state.piogge.tNotte+"°C", ok});
+    const aH=state.piogge?.albaH, tH=state.piogge?.tramH;
+    const notteLabel = (state.piogge?.usaSunrise && aH!=null && tH!=null)
+      ? "T° notte ("+Math.floor(tH)+"-"+Math.floor(aH)+")"
+      : "T° notte (20-6)";
+    items.push({l:notteLabel, v:state.piogge.tNotte+"°C", ok});
   }
   if(state.piogge?.tGiorno!=null) {
     const ok=state.piogge.tGiorno>=10&&state.piogge.tGiorno<=22;
-    items.push({l:"T° giorno (6-22)", v:state.piogge.tGiorno+"°C", ok});
+    const aH=state.piogge?.albaH, tH=state.piogge?.tramH;
+    const giornoLabel = (state.piogge?.usaSunrise && aH!=null && tH!=null)
+      ? "T° giorno ("+Math.floor(aH)+"-"+Math.floor(tH)+")"
+      : "T° giorno (6-20)";
+    items.push({l:giornoLabel, v:state.piogge.tGiorno+"°C", ok});
   }
   if(extra.tSuolo!=null) {
     const ok = extra.tSuolo>=8&&extra.tSuolo<=18;
