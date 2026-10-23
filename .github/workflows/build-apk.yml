@@ -68,7 +68,10 @@ jobs:
           fi
 
       - name: Install imagemagick
-        run: sudo apt-get install -y imagemagick
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y --fix-missing imagemagick || \
+          sudo apt-get install -y --fix-missing imagemagick-6.q16
 
       - name: Copy app icon
         run: |
